@@ -21,7 +21,6 @@ elif shift == "3":
 else:
     print("Invalid shift selection. Please choose 1, 2, or 3.")
     exit()
-
 shift_time = selected_shift[1]
 daily_fee = selected_shift[len(selected_shift) // 2]
 extra_time = selected_shift[-1]
@@ -29,6 +28,7 @@ extra_time = selected_shift[-1]
 
 print (f"Shift time: {shift_time} minutes")
 print (f"Daily fee: {daily_fee} dollars")
+print (f"Extra fee: {extra_time} dollars")
 
 print ("-"*50)
 
@@ -37,6 +37,7 @@ time_spent = 0
 time_shift = 0
 earnings = 0
 Total_earnings = 0
+current_earnings = 0
 
 
 while Total_earnings < debt:
@@ -66,16 +67,18 @@ while Total_earnings < debt:
         print (f"Earnings for the day: {daily_earnings}") 
         print ("")
 
-        daily_earnings = punishment(daily_earnings, selected_shift)
+        current_earnings_1= punishment(current_earnings, selected_shift)
 
         earnings = daily_earnings - daily_fee
-        Total_earnings = Total_earnings + earnings
+        Total_earnings = Total_earnings + earnings + current_earnings_1
+        Total_punishment = earnings + current_earnings_1   
 
         print ("")
         print (f"Daily earning after punishment",daily_earnings)
 
         print (f"Daily fee: {daily_fee}")
         print (f"Total earnings after daily fee: {earnings}")
+        print (f"Current earnings of punishment and earning after fee: {Total_punishment}")
         print (f"Total earnings: {Total_earnings}")
         print ("")
 

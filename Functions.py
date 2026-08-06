@@ -59,10 +59,12 @@ def pay_half ():
 
 def punishment_selector(current_earnings,selected_shift):
     random_punishment = random.randint(0, 9)
+    total_time = 0
+    extra_earnings = 0      
 
     if random_punishment == 7:
         print("You have to work in a bad part of town; half your earnings will be stolen.")
-        return current_earnings // 2
+        return extra_earnings // 2
 
     elif random_punishment == 8:
         print("You have been robbed.")
@@ -72,28 +74,48 @@ def punishment_selector(current_earnings,selected_shift):
         print("You have to work an extra shift.")
 
         shift_time = selected_shift[1]
+        total_time = 0
+        extra_earnings = 0
+        current_earnings = 0
+        masterlist_extra = []
 
-        package_select()
-        rest_period()
-        pay_half()
-        masterlist_extra= []
+        while total_time < shift_time:
+            selected_package, selected_service, time_spent = package_select()
 
-        while Total_time < shift_time:
-        
-                    selected_package, selected_service, time_spent = package_select()
-                    rest_time = rest_period()
-                    time_spent += rest_time
-                    Total_time += time_spent
-                    daily_earnings += selected_service
-        
-                    masterlist_extra.append(f"Selected package: {selected_package} | Selected service: {selected_service} | Time spent: {time_spent} minutes | Time rest: {rest_time} minutes | Total time: {Total_time} minutes | Earnings: {selected_service}")
-        
+            rest_time = rest_period()
+            time_spent += rest_time
 
+           # current_earnings += extra_earnings
+
+            total_time += time_spent
+            extra_earnings += selected_service
+
+            masterlist_extra.append(
+                f"Selected package: {selected_package} | "
+                f"Selected service: {selected_service} | "
+                f"Time spent: {time_spent} minutes | "
+                f"Rest time: {rest_time} minutes | "
+                f"Total time: {total_time} minutes | "
+                f"Earnings: {selected_service}"
+            )
+        extra_fee = selected_shift[-1]
+        print(*masterlist_extra, sep="\n")
+
+        print("")
+        print(f"Extra-shift earnings: {extra_earnings}")
+        print(f"Extra-shift fee: {extra_fee}")
+
+        total_extra_earnings = extra_earnings - extra_fee
+
+        print(f"Extra-shift earnings after fee: {total_extra_earnings}")
+
+        current_earnings = total_extra_earnings
 
         return current_earnings
 
     else:
         print("No monetary punishment.")
+
         return current_earnings
 
 
