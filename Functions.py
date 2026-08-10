@@ -56,7 +56,6 @@ def pay_half(pay_multiplier):
 
     return pay_multiplier
 
-
 def punishment_selector(daily_earnings, selected_shift, pay_multiplier, shift_time,Total_time):
     random_punishment = random.randint(0, 9)
     daily_earnings_after_punishment = daily_earnings
@@ -128,7 +127,6 @@ def punishment_selector(daily_earnings, selected_shift, pay_multiplier, shift_ti
 
 def punishment(selected_shift, pay_multiplier, daily_earnings, shift_time, Total_time): #
     random_punishment = random.randint(0, 9)
-    print(f"punishment num",random_punishment)
 
     if random_punishment < 5:
         print("You have been punished twice today.")
