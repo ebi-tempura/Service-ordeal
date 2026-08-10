@@ -45,59 +45,68 @@ def rest_period():
 
     return rest_time
 
-def pay_half ():
+def pay_half(pay_multiplier):
     random_half_pay = random.randint(0, 9)
 
-    #print (f"Random half pay: {random_half_pay}")
+    if random_half_pay < 2:
+        pay_multiplier = 0.5
 
-    if random_half_pay == 0:
-        pay_multiplier = 2
     else:
         pay_multiplier = 1
 
     return pay_multiplier
 
-def punishment_selector(current_earnings,selected_shift):
+
+def punishment_selector(daily_earnings, selected_shift, pay_multiplier, shift_time,Total_time):
     random_punishment = random.randint(0, 9)
-    total_time = 0
-    extra_earnings = 0      
+    daily_earnings_after_punishment = daily_earnings
+    print ("")
+    print (f"Daily earnings before punishment: {daily_earnings}")  
 
     if random_punishment == 7:
         print("You have to work in a bad part of town; half your earnings will be stolen.")
-        return extra_earnings // 2
+        daily_earnings *= 0.5
+        daily_earnings_after_punishment = daily_earnings
+        print (f"Daily earnings after punishment, half: {daily_earnings_after_punishment}")
 
     elif random_punishment == 8:
         print("You have been robbed.")
-        return 0
+        daily_earnings = 0
+        daily_earnings_after_punishment = daily_earnings
+        print (f"Daily earnings after punishment, robbed: {daily_earnings_after_punishment}")
 
     elif random_punishment == 0:
         print("You have to work an extra shift.")
 
-        shift_time = selected_shift[1]
-        total_time = 0
-        extra_earnings = 0
-        current_earnings = 0
         masterlist_extra = []
 
-        while total_time < shift_time:
-            selected_package, selected_service, time_spent = package_select()
 
+        while Total_time < shift_time:
+
+            X = 0
+
+            selected_package, selected_service, time_spent = package_select()
+            pay_multiplier = pay_half(pay_multiplier)
             rest_time = rest_period()
             time_spent += rest_time
 
            # current_earnings += extra_earnings
 
-            total_time += time_spent
+            Total_time += time_spent
             extra_earnings += selected_service
 
-            masterlist_extra.append(
-                f"Selected package: {selected_package} | "
-                f"Selected service: {selected_service} | "
-                f"Time spent: {time_spent} minutes | "
-                f"Rest time: {rest_time} minutes | "
-                f"Total time: {total_time} minutes | "
-                f"Earnings: {selected_service}"
-            )
+        if pay_multiplier == 0.5:
+        
+                        X = "*"
+
+        masterlist_extra.append(f"Selected package: {selected_package} |" 
+                                   f"Selected service: {selected_service} |"
+                                   f"{X}|" 
+                                   f"Earnings: {extra_earnings} |"
+                                   f" Time spent: {time_spent} minutes |" 
+                                   f" Time rest: {rest_time} minutes |"
+                                   f" Total time: {Total_time} minutes ")
+        
         extra_fee = selected_shift[-1]
         print(*masterlist_extra, sep="\n")
 
@@ -105,31 +114,32 @@ def punishment_selector(current_earnings,selected_shift):
         print(f"Extra-shift earnings: {extra_earnings}")
         print(f"Extra-shift fee: {extra_fee}")
 
-        total_extra_earnings = extra_earnings - extra_fee
+        daily_earnings_after_punishment = extra_earnings - extra_fee
 
-        print(f"Extra-shift earnings after fee: {total_extra_earnings}")
-
-        current_earnings = total_extra_earnings
-
-        return current_earnings
+        print(f"Extra-shift earnings after fee: {daily_earnings_after_punishment}")
 
     else:
         print("No monetary punishment.")
 
-        return current_earnings
+    return daily_earnings_after_punishment, pay_multiplier
 
-
-def punishment(current_earnings,selected_shift):
+def punishment(selected_shift, pay_multiplier,daily_earnings,shift_time,Total_time): #
     random_punishment = random.randint(0, 9)
+    print(f"punishment num",random_punishment)
 
     if random_punishment < 5:
         print("You have been punished twice today.")
-        current_earnings = punishment_selector(current_earnings, selected_shift)
-        current_earnings = punishment_selector(current_earnings, selected_shift)
+        daily_earnings, pay_multiplier = punishment_selector(daily_earnings,selected_shift,pay_multiplier,shift_time,Total_time)  
+        daily_earnings, pay_multiplier = punishment_selector(daily_earnings,selected_shift,pay_multiplier,shift_time,Total_time)  
+
+        
     elif random_punishment >= 5:
         print("You have been punished once today.")
-        current_earnings = punishment_selector(current_earnings, selected_shift)
+        daily_earnings, pay_multiplier = punishment_selector(daily_earnings,selected_shift,pay_multiplier,shift_time,Total_time)  
+
+
     else:
         print("No punishment today.")
 
-    return current_earnings
+    return daily_earnings,pay_multiplier
+

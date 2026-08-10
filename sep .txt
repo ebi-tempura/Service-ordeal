@@ -1,0 +1,38 @@
+# while total_time < shift_time:
+
+            X = 0
+
+            selected_package, selected_service, time_spent = package_select()
+            pay_multiplier = pay_half(pay_multiplier)
+            rest_time = rest_period()
+            time_spent += rest_time
+
+           # current_earnings += extra_earnings
+
+            total_time += time_spent
+            extra_earnings += selected_service
+
+        if pay_multiplier == 0.5:
+        
+                        X = "*"
+
+        masterlist_extra.append(f"Selected package: {selected_package} |" 
+                                   f"Selected service: {selected_service} |"
+                                   f"{X}|" 
+                                   f"Earnings: {extra_earnings} |"
+                                   f" Time spent: {time_spent} minutes |" 
+                                   f" Time rest: {rest_time} minutes |"
+                                   f" Total time: {total_time} minutes ")
+        
+        extra_fee = selected_shift[-1]
+        print(*masterlist_extra, sep="\n")
+
+        print("")
+        print(f"Extra-shift earnings: {extra_earnings}")
+        print(f"Extra-shift fee: {extra_fee}")
+
+        total_extra_earnings = extra_earnings - extra_fee
+
+        print(f"Extra-shift earnings after fee: {total_extra_earnings}")
+
+        current_earnings += total_extra_earnings
