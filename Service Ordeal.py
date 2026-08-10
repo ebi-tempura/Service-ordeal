@@ -40,6 +40,7 @@ Total_earnings = 0
 current_earnings = 0
 pay_multiplier = 0
 
+
 while Total_earnings < debt:
         
         day += 1
@@ -82,7 +83,7 @@ while Total_earnings < debt:
         print (f"Earnings for the day: {daily_earnings}") 
         print ("")
 
-        daily_earnings_after_punishment, pay_multiplier = punishment(current_earnings, selected_shift,pay_multiplier,daily_earnings,Total_time)
+        daily_earnings_after_punishment, pay_multiplier = punishment(selected_shift,pay_multiplier,daily_earnings,shift_time, Total_time)
 
         print ("")
         print (f"**Daily earnings after punishment in the main script: {daily_earnings_after_punishment}")

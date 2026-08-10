@@ -60,6 +60,7 @@ def pay_half(pay_multiplier):
 def punishment_selector(daily_earnings, selected_shift, pay_multiplier, shift_time,Total_time):
     random_punishment = random.randint(0, 9)
     daily_earnings_after_punishment = daily_earnings
+    extra_earnings = 0
     print ("")
     print (f"Daily earnings before punishment: {daily_earnings}")  
 
@@ -79,6 +80,8 @@ def punishment_selector(daily_earnings, selected_shift, pay_multiplier, shift_ti
         print("You have to work an extra shift.")
 
         masterlist_extra = []
+        extra_earnings = 0
+        Total_time = 0
 
 
         while Total_time < shift_time:
@@ -95,11 +98,11 @@ def punishment_selector(daily_earnings, selected_shift, pay_multiplier, shift_ti
             Total_time += time_spent
             extra_earnings += selected_service
 
-        if pay_multiplier == 0.5:
+            if pay_multiplier == 0.5:
         
-                        X = "*"
+                X = "*"
 
-        masterlist_extra.append(f"Selected package: {selected_package} |" 
+            masterlist_extra.append(f"Selected package: {selected_package} |" 
                                    f"Selected service: {selected_service} |"
                                    f"{X}|" 
                                    f"Earnings: {extra_earnings} |"
@@ -114,7 +117,7 @@ def punishment_selector(daily_earnings, selected_shift, pay_multiplier, shift_ti
         print(f"Extra-shift earnings: {extra_earnings}")
         print(f"Extra-shift fee: {extra_fee}")
 
-        daily_earnings_after_punishment = extra_earnings - extra_fee
+        daily_earnings_after_punishment += extra_earnings - extra_fee
 
         print(f"Extra-shift earnings after fee: {daily_earnings_after_punishment}")
 
@@ -123,7 +126,7 @@ def punishment_selector(daily_earnings, selected_shift, pay_multiplier, shift_ti
 
     return daily_earnings_after_punishment, pay_multiplier
 
-def punishment(selected_shift, pay_multiplier,daily_earnings,shift_time,Total_time): #
+def punishment(selected_shift, pay_multiplier, daily_earnings, shift_time, Total_time): #
     random_punishment = random.randint(0, 9)
     print(f"punishment num",random_punishment)
 
