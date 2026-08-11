@@ -1,5 +1,5 @@
 
-from Functions import package_select, punishment, rest_period, pay_half, punishment_selector
+from Functions import package_select, punishment, rest_period, pay_half, punishment_belowZero
 
 print ("-"*50)
 debt = 1500
@@ -9,8 +9,8 @@ shift = input ("Enter the shift you are going to work: ")
 print (f"The shift chosen is of {shift} hour(s)" )
 
 shift_1 = [1, 60, 120, 90]
-shift_2 = [2, 120, 320, 240]
-shift_3 = [3, 180, 520, 390]
+shift_2 = [2, 120, 240, 180]
+shift_3 = [3, 180, 360, 210]
 
 if shift == "1":
     selected_shift = shift_1
@@ -47,9 +47,11 @@ while Total_earnings < debt:
         Total_time = 0
         daily_earnings = 0
         masterlist = []
+        time_spent_w_rest = 0
 
-        print ("-"*50)
+        print ("*"*50)
         print (f"Day {day}")
+        print ("*"*50)
 
         while Total_time < shift_time:
 
@@ -61,6 +63,11 @@ while Total_earnings < debt:
             time_spent_w_rest = time_spent
             time_spent_w_rest += rest_time
             Total_time += time_spent_w_rest
+
+            if Total_time + time_spent == shift_time + 5:
+
+                 break
+
             selected_service = selected_service * pay_multiplier
             daily_earnings += selected_service
 
@@ -76,24 +83,31 @@ while Total_earnings < debt:
                               f" Time rest: {rest_time} minutes |"
                               f" Total time: {Total_time} minutes ")
 
+
         print ("")
         print (*masterlist, sep="  \n")
         print ("")
 
         print (f"Earnings for the day: {daily_earnings}") 
-        print ("")
+        print ("-"*50)
 
         daily_earnings_after_punishment, pay_multiplier = punishment(selected_shift,pay_multiplier,daily_earnings,shift_time, Total_time)
 
         print ("")
-        print (f"**Daily earnings after punishment in the main script: {daily_earnings_after_punishment}")
+#       print (f"**Daily earnings after punishment in the main script: {daily_earnings_after_punishment}")
 
         Total_earnings_after_punishment_and_fee = daily_earnings_after_punishment - daily_fee
         Total_earnings += Total_earnings_after_punishment_and_fee
   
         print ("")
+        print ("-"*50)
         print (f"Daily fee: {daily_fee}")
         print(f"Daily earning after punishment and fee", Total_earnings_after_punishment_and_fee)
+
+        if Total_earnings_after_punishment_and_fee <0:
+
+                     daily_earnings_after_punishment, pay_multiplier = punishment_belowZero(selected_shift,pay_multiplier,daily_earnings,shift_time, Total_time)
+
         print(f"Total earnings", Total_earnings)
 
         print ("")

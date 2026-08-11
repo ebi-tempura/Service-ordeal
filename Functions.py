@@ -64,37 +64,49 @@ def punishment_selector(daily_earnings, selected_shift, pay_multiplier, shift_ti
     print (f"Daily earnings before punishment: {daily_earnings}")  
 
     if random_punishment == 7:
+
+        print ("")
         print("You have to work in a bad part of town; half your earnings will be stolen.")
         daily_earnings *= 0.5
         daily_earnings_after_punishment = daily_earnings
         print (f"Daily earnings after punishment, half: {daily_earnings_after_punishment}")
 
     elif random_punishment == 8:
+
+        print ("")
         print("You have been robbed.")
         daily_earnings = 0
         daily_earnings_after_punishment = daily_earnings
         print (f"Daily earnings after punishment, robbed: {daily_earnings_after_punishment}")
 
     elif random_punishment == 0:
+
+        print ("")
         print("You have to work an extra shift.")
+        print ("")
 
         masterlist_extra = []
         extra_earnings = 0
+        time_spent_wrest = 0
         Total_time = 0
 
 
         while Total_time < shift_time:
 
-            X = 0
+            X = ""
 
             selected_package, selected_service, time_spent = package_select()
             pay_multiplier = pay_half(pay_multiplier)
             rest_time = rest_period()
-            time_spent += rest_time
+            time_spent_wrest = time_spent
+            time_spent_wrest+= rest_time
+            Total_time += time_spent_wrest
 
-           # current_earnings += extra_earnings
+            if Total_time + time_spent == shift_time + 5:
 
-            Total_time += time_spent
+                 break
+
+            selected_service = selected_service * pay_multiplier
             extra_earnings += selected_service
 
             if pay_multiplier == 0.5:
@@ -128,19 +140,28 @@ def punishment_selector(daily_earnings, selected_shift, pay_multiplier, shift_ti
 def punishment(selected_shift, pay_multiplier, daily_earnings, shift_time, Total_time): #
     random_punishment = random.randint(0, 9)
 
-    if random_punishment < 5:
+    if random_punishment < 6 :
         print("You have been punished twice today.")
         daily_earnings, pay_multiplier = punishment_selector(daily_earnings,selected_shift,pay_multiplier,shift_time,Total_time)  
         daily_earnings, pay_multiplier = punishment_selector(daily_earnings,selected_shift,pay_multiplier,shift_time,Total_time)  
 
         
-    elif random_punishment >= 5:
+    elif random_punishment >= 6:
         print("You have been punished once today.")
         daily_earnings, pay_multiplier = punishment_selector(daily_earnings,selected_shift,pay_multiplier,shift_time,Total_time)  
 
 
     else:
+
+        print ("")
         print("No punishment today.")
 
     return daily_earnings,pay_multiplier
 
+def punishment_belowZero(selected_shift, pay_multiplier, daily_earnings, shift_time, Total_time):
+    
+    print ("")
+    print("You have been punished because you didnt earn enough to pay you daily fee!.")
+    print ("")
+
+    return daily_earnings,pay_multiplier
