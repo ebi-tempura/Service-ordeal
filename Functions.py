@@ -102,7 +102,7 @@ def punishment_selector(daily_earnings, selected_shift, pay_multiplier, shift_ti
             time_spent_wrest+= rest_time
             Total_time += time_spent_wrest
 
-            if Total_time + time_spent == shift_time + 5:
+            if Total_time + time_spent + rest_time > shift_time + 15:
 
                  break
 
@@ -140,19 +140,16 @@ def punishment_selector(daily_earnings, selected_shift, pay_multiplier, shift_ti
 def punishment(selected_shift, pay_multiplier, daily_earnings, shift_time, Total_time): #
     random_punishment = random.randint(0, 9)
 
-    if random_punishment < 6 :
+    if random_punishment < 3 :
         print("You have been punished twice today.")
         daily_earnings, pay_multiplier = punishment_selector(daily_earnings,selected_shift,pay_multiplier,shift_time,Total_time)  
         daily_earnings, pay_multiplier = punishment_selector(daily_earnings,selected_shift,pay_multiplier,shift_time,Total_time)  
 
-        
-    elif random_punishment >= 6:
+    elif random_punishment < 7:
         print("You have been punished once today.")
         daily_earnings, pay_multiplier = punishment_selector(daily_earnings,selected_shift,pay_multiplier,shift_time,Total_time)  
 
-
     else:
-
         print ("")
         print("No punishment today.")
 

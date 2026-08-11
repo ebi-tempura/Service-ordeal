@@ -64,7 +64,7 @@ while Total_earnings < debt:
             time_spent_w_rest += rest_time
             Total_time += time_spent_w_rest
 
-            if Total_time + time_spent == shift_time + 5:
+            if Total_time + time_spent> shift_time + 15:
 
                  break
 
