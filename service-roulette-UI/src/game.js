@@ -204,7 +204,7 @@ export function rollCustomer(game, rng = Math.random, now = new Date()) {
   const remaining = remainingTime(next);
   const customer = choose(Object.values(CUSTOMERS), rng);
   const serviceMinutes = customer.tasks.length * 5;
-  
+
   const packageName = Object.entries(PACKAGES).find(([, codes]) => codes.includes(customer.code))?.[0];
   const rolls = {};
   for (const letter of "TUVWXYZ") rolls[letter] = roll10(rng);
