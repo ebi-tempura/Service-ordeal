@@ -251,8 +251,8 @@ export function rollCustomer(game, rng = Math.random, now = new Date()) {
 }
 
 function punishmentRolls(rng) {
-  const top = roll10(rng);
-  const count = top < 3 ? 2 : top < 7 ? 1 : 0;
+  const chance = rng();
+  const count = chance < 0.35 ? 2 : chance < 0.80 ? 1 : 0;
   const rolls = [];
   while (rolls.length < count) {
     const roll = roll10(rng);
