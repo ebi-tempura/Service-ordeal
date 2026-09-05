@@ -136,15 +136,16 @@ button:disabled { cursor: not-allowed; opacity: .42; }
 .report-modal > header { display: flex; justify-content: space-between; align-items: flex-start; }
 .report-modal h1 { margin-top: 4px; }
 .chart-wrap { margin-top: 18px; padding: 18px; }
+.cumulative-chart { margin-top: 28px; border-top: 1px solid #362341; padding-top: 22px; }
 .chart-title { display: flex; justify-content: space-between; gap: 20px; }
 .chart-title h2 { margin: 0; }
 .chart-title p { margin: 4px 0; color: #aa97b4; }
 .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 14px; }
 .legend span::before { content: ""; display: inline-block; width: 9px; height: 9px; margin-right: 5px; border-radius: 2px; }
-.legend .gross::before { background: #a77bff; }.legend .net::before { background: #57f2aa; }.legend .fees::before { background: #8b5cff; }.legend .loss::before { background: #ff6178; }.legend .cumulative::before { background: #25dff5; }
+.legend .gross::before { background: #ff2fa4; }.legend .net::before { background: #57f2aa; }.legend .fees::before { background: #8b5cff; }.legend .loss::before { background: #ff6178; }.legend .cumulative::before { background: #25dff5; }
 .chart-wrap svg { display: block; width: 100%; height: auto; margin-top: 8px; }
 .chart-wrap svg text { fill: #aa97b4; font-size: 14px; }.axis-heading { fill: #d8cade !important; font-weight: 800; }.cumulative-heading, .cumulative-axis { fill: #25dff5 !important; font-weight: 800; }
-.grid-line { stroke: #302139; stroke-width: 1; }.zero-line { stroke: #f4edf7; stroke-width: 1.5; }.waterfall-connector { stroke: #766080; stroke-width: 1; stroke-dasharray: 3 3; }.bar-gross { fill: #a77bff; }.bar-net { fill: #57f2aa; }.bar-fees { fill: #8b5cff; }.bar-loss, .bar-negative { fill: #ff6178; }.cumulative-line { fill: none; stroke: #25dff5; stroke-width: 3; }.cumulative-dot { fill: #25dff5; }
+.grid-line { stroke: #302139; stroke-width: 1; }.zero-line { stroke: #f4edf7; stroke-width: 1.5; }.waterfall-connector { stroke: #766080; stroke-width: 1; stroke-dasharray: 3 3; }.bar-gross { fill: #ff2fa4; }.bar-net { fill: #57f2aa; }.bar-fees { fill: #8b5cff; }.bar-loss, .bar-negative { fill: #ff6178; }.cumulative-line { fill: none; stroke: #25dff5; stroke-width: 3; }.cumulative-area { fill: rgba(37,223,245,.12); }.cumulative-dot { fill: #25dff5; }
 .report-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 12px; }
 .report-grid section { padding: 16px; }
 .report-grid h3, .daily-results h3 { margin: 0 0 12px; color: #c6aaff; }
