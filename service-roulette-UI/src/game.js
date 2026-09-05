@@ -253,7 +253,13 @@ export function rollCustomer(game, rng = Math.random, now = new Date()) {
 function punishmentRolls(rng) {
   const top = roll10(rng);
   const count = top < 3 ? 2 : top < 7 ? 1 : 0;
-  return Array.from({ length: count }, () => roll10(rng));
+  const rolls = [];
+  while (rolls.length < count) {
+    const roll = roll10(rng);
+    if (roll !== 0 && rolls.includes(roll)) continue;
+    rolls.push(roll);
+  }
+  return rolls;
 }
 
 function resolvePosition(rng) {
