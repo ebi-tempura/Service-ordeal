@@ -137,12 +137,6 @@ function DayOverview({ game, onContinue, onReport, final }) {
   return (
     <div className="overview-screen">
       <div className="summary-tabs"><button className="active">{final ? "Final day overview" : `Day ${day.day} overview`}</button>{final && <button disabled>Release day</button>}<button className="report-link" onClick={onReport}>View full report</button></div>
-      <div className="summary-metrics">
-        <StatCard label={final ? "FINAL DAY GROSS" : `DAY ${day.day} GROSS`} value={money(day.gross)} />
-        <StatCard label={final ? "FINAL DAY NET" : `DAY ${day.day} NET`} value={money(day.net)} tone={day.net >= 0 ? "green" : "red"} />
-        <StatCard label="RUN TOTAL" value={money(game.totalEarnings)} />
-        <StatCard label="DAYS WORKED" value={game.completedDays.length} />
-      </div>
       <section className="day-breakdown">
         <h2>Day {day.day} completed{final ? " — debt paid" : ""}</h2>
         <p>{final ? "The debt is paid. Review the final day before beginning the separate release-day sequence." : `Day ${game.day} has not started yet.`}</p>
@@ -187,12 +181,18 @@ function MoneyChart({ days }) {
   const dailyMin = Math.min(0, ...values.flatMap((day) => [day.net, day.gross - day.loss - day.fees]));
   const dailyMax = Math.max(1, ...values.map((day) => day.gross));
   const dailyRange = Math.max(1, dailyMax - dailyMin);
+  const cumulativeMin = Math.min(0, ...values.map((day) => day.cumulative));
+  const cumulativeMax = Math.max(DEBT_TARGET, ...values.map((day) => day.cumulative), 1);
+  const cumulativeRange = Math.max(1, cumulativeMax - cumulativeMin);
   const yDaily = (value) => bottom - (value - dailyMin) / dailyRange * (bottom - top);
+  const yCumulative = (value) => bottom - (value - cumulativeMin) / cumulativeRange * (bottom - top);
   const dailyTicks = Array.from({ length: 4 }, (_, index) => dailyMin + dailyRange * index / 3);
+  const cumulativeTicks = Array.from({ length: 4 }, (_, index) => cumulativeMin + cumulativeRange * index / 3);
   const slot = (right - left) / values.length;
   const barGap = 3;
   const barWidth = Math.min(18, Math.max(7, (slot * 0.68 - barGap * 3) / 4));
   const barOffsets = [-1.5, -.5, .5, 1.5].map((step) => step * (barWidth + barGap));
+  const cumulativePoints = values.map((day, index) => `${left + slot * (index + .5)},${yCumulative(day.cumulative)}`).join(" ");
   return (
     <div className="chart-wrap">
       <div className="chart-title"><div><h2>Where the money went</h2><p>Daily waterfall · one scale · zero line always visible</p></div><div className="legend"><span className="gross">Gross</span><span className="loss">Punishment loss</span><span className="fees">Fees</span><span className="net">Daily net</span></div></div>
@@ -216,6 +216,16 @@ function MoneyChart({ days }) {
         })}
         <text x={left} y={bottom + 47} className="waterfall-note">Gross → punishment loss → fee → net</text>
       </svg>
+      <section className="cumulative-chart">
+        <div className="chart-title"><div><h2>Run progress</h2><p>Cumulative net earnings across every completed day</p></div><div className="legend"><span className="cumulative">Cumulative net</span></div></div>
+        <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Cumulative net earnings by day">
+          {cumulativeTicks.map((value) => <g key={value}><line x1={left} x2={right} y1={yCumulative(value)} y2={yCumulative(value)} className="grid-line"/><text x={left - 9} y={yCumulative(value) + 5} textAnchor="end">${Math.round(value)}</text></g>)}
+          <line x1={left} x2={right} y1={yCumulative(0)} y2={yCumulative(0)} className="zero-line" />
+          <path d={`${cumulativePoints} L ${left + slot * (values.length - .5)},${bottom} L ${left + slot * .5},${bottom} Z`} className="cumulative-area" />
+          <polyline points={cumulativePoints} className="cumulative-line" />
+          {values.map((day, index) => <g key={day.day}><circle cx={left + slot * (index + .5)} cy={yCumulative(day.cumulative)} r="5" className="cumulative-dot"><title>{`Cumulative net: $${Math.round(day.cumulative)}`}</title></circle><text x={left + slot * (index + .5)} y={bottom + 21} textAnchor="middle">D{day.day}</text></g>)}
+        </svg>
+      </section>
     </div>
   );
 }
