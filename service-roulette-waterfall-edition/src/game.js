@@ -202,12 +202,14 @@ export function rollCustomer(game, rng = Math.random, now = new Date()) {
     ({ game: next, reasons: scheduleReasons } = schedulePenalties(game, now));
   }
   const remaining = remainingTime(next);
-  const eligibleCustomers = Object.values(CUSTOMERS)
-    .filter((customer) => customer.tasks.length * 5 <= remaining);
-  if (!eligibleCustomers.length) {
-    return { ...next, notice: { kind: "info", text: "Shift complete. Resolve the day to continue." } };
+  const customer = choose(Object.values(CUSTOMERS), rng);
+  const serviceMinutes = customer.tasks.length * 5;
+  if (serviceMinutes > remaining) {
+    return {
+      ...next,
+      notice: { kind: "info", text: `${customer.name} was rolled, but the ${serviceMinutes}-minute service does not fit in ${remaining} minutes. Shift complete.` },
+    };
   }
-  const customer = choose(eligibleCustomers, rng);
   const packageName = Object.entries(PACKAGES).find(([, codes]) => codes.includes(customer.code))?.[0];
   const rolls = {};
   for (const letter of "TUVWXYZ") rolls[letter] = roll10(rng);
@@ -218,7 +220,6 @@ export function rollCustomer(game, rng = Math.random, now = new Date()) {
   const tasks = customer.tasks.map((kind, index) => taskFor(kind, taskRolls[index]));
   const halfPay = roll10(rng) < 2;
   const money = customer.money * (halfPay ? 0.5 : 1);
-  const serviceMinutes = customer.tasks.length * 5;
   const restRoll = 1 + Math.floor(rng() * 9);
   const restMinutes = restRoll >= 5 && serviceMinutes + 5 <= remaining ? 5 : 0;
   const result = {
