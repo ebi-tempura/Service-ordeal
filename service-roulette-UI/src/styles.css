@@ -181,3 +181,41 @@ button:disabled { cursor: not-allowed; opacity: .42; }
   .report-grid { grid-template-columns: 1fr; }
   .daily-results > div { grid-template-columns: 1fr 1fr; }
 }
+
+/* One gentle pink pulse for a newly rolled 2x1 event. */
+.kink-event-flash {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, rgba(255, 47, 164, .12), rgba(255, 47, 164, .48));
+  opacity: 0;
+  animation: kink-event-pulse 1000ms ease-out forwards;
+}
+@keyframes kink-event-pulse {
+  0% { opacity: 0; }
+  25% { opacity: 1; }
+  100% { opacity: 0; }
+}
+.kink-event-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+  padding: 12px 16px;
+  border: 1px solid #ff2fa4;
+  border-radius: 10px;
+  background: #3b1230;
+  color: #ffd3ed;
+  box-shadow: 0 0 20px rgba(255, 47, 164, .18);
+}
+.kink-event-banner span { font-size: 12px; font-weight: 800; letter-spacing: .1em; }
+.kink-event-banner strong { color: #ff70c4; font-size: 26px; }
+@media (prefers-reduced-motion: reduce) {
+  .kink-event-flash { animation: kink-event-still 1ms forwards; }
+}
+@keyframes kink-event-still {
+  from { opacity: 0; }
+  to { opacity: 0; }
+}

@@ -36,7 +36,7 @@ const ANAL_TASKS = {
 const KINKS = {
   1: "Blindfold", 2: "Body Writing", 3: "Handcuffs", 4: "Handcuffs",
   5: "Plug", 6: "Plug", 7: "Spread Ass", 8: "Strip Dance",
-  9: "Strip Dance", 0: "Neck chained",
+  9: "2x1", 0: "Neck chained",
 };
 
 const CHEST_MOUTH_FACE = {

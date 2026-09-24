@@ -86,6 +86,7 @@ function ServiceCard({ service, mode }) {
   }
   return (
     <div className="service-content">
+      {service.rolls.U === 9 && service.kink === "2x1" && <div className="kink-event-banner" role="status"><span>SPECIAL EVENT</span><strong>2x1</strong></div>}
       <div className="service-heading">
         <div><span className="eyebrow">{mode === "extra" ? "EXTRA SHIFT" : `PACKAGE ${service.package}`}</span><h2>{service.customer}</h2></div>
         <div className="payment"><span>{service.halfPay ? "HALF PAY" : "FULL PAY"}</span><strong>{money(service.money)}</strong></div>
@@ -253,6 +254,7 @@ function Report({ game, onClose }) {
 export default function App() {
   const [game, setGame] = useState(loadAutosave);
   const [reportOpen, setReportOpen] = useState(false);
+  const [pinkFlash, setPinkFlash] = useState(0);
   const [summaryTab, setSummaryTab] = useState("overview");
   const importRef = useRef(null);
   const shift = SHIFTS[game.shiftKey];
@@ -261,6 +263,13 @@ export default function App() {
 
   useEffect(() => { localStorage.setItem(SAVE_KEY, JSON.stringify(game)); }, [game]);
   useEffect(() => { if (game.mode === "releaseReady") setSummaryTab("overview"); if (game.mode === "release") setSummaryTab("release"); }, [game.mode]);
+
+  const handleRollCustomer = () => {
+    const next = rollCustomer(game);
+    const rolled = next.history.length > game.history.length;
+    setPinkFlash((current) => rolled && next.currentService?.rolls.U === 9 ? current + 1 : 0);
+    setGame(next);
+  };
 
   const exportSave = () => {
     const blob = new Blob([JSON.stringify(game, null, 2)], { type: "application/json" });
@@ -282,6 +291,7 @@ export default function App() {
   const latestDay = game.completedDays.at(-1);
   return (
     <div className="app-shell">
+      {pinkFlash > 0 && <div key={pinkFlash} className="kink-event-flash" aria-hidden="true" onAnimationEnd={() => setPinkFlash(0)} />}
       <header className="app-header"><div className="brand">SERVICE <span>ROULETTE</span><small>{shift.label} · {shift.minutes} min</small></div><nav><label className="mini-toggle"><input type="checkbox" checked={Boolean(game.enforceStartTime)} onChange={(event) => setGame({ ...game, enforceStartTime: event.target.checked, notice: { kind: "info", text: `Time Lock ${event.target.checked ? "enabled" : "disabled"}.` } })} /><span className="toggle-track"><i /></span><b>Time Lock</b></label><button onClick={exportSave}>Export save</button><button onClick={() => importRef.current?.click()}>Import save</button><button onClick={reset}>New run</button><input ref={importRef} type="file" accept="application/json" hidden onChange={importSave}/></nav></header>
 
       {isSummary ? (
@@ -293,7 +303,7 @@ export default function App() {
           <Notification notice={game.notice} />
           <div className="stats-row"><StatCard label="DAY" value={game.day}/><StatCard label="TIME LEFT" value={`${timeLeft} min`}/><StatCard label="DAY GROSS" value={money(game.mode === "extra" ? game.extraEarnings : game.dailyEarnings)} tone="green"/><StatCard label="RUN TOTAL" value={money(game.totalEarnings)} tone="green"/><StatCard label="DEBT LEFT" value={money(debtLeft)} tone="pink"/></div>
           <div className="progress-row"><Progress label="SHIFT PROGRESS" value={game.elapsed/shift.minutes*100} detail={`${game.elapsed} / ${shift.minutes} min`} tone="purple"/><Progress label="DEBT PROGRESS" value={game.totalEarnings/DEBT_TARGET*100} detail={`${Math.max(0, game.totalEarnings/DEBT_TARGET*100).toFixed(0)}% paid`} /></div>
-          <div className="play-grid"><section className="service-panel"><ServiceCard service={game.currentService} mode={game.mode}/><div className="game-actions"><button className="primary-action" disabled={timeLeft < 10} onClick={() => setGame(rollCustomer(game))}>{game.mode === "extra" ? "ROLL EXTRA CUSTOMER" : "ROLL CUSTOMER"}</button><button className="secondary-action" disabled={timeLeft >= 10} onClick={() => setGame(resolveDay(game))}>{game.mode === "extra" ? "FINISH EXTRA SHIFT" : "RESOLVE DAY"}</button></div></section><History items={game.history}/></div>
+          <div className="play-grid"><section className="service-panel"><ServiceCard service={game.currentService} mode={game.mode}/><div className="game-actions"><button className="primary-action" disabled={timeLeft < 10} onClick={handleRollCustomer}>{game.mode === "extra" ? "ROLL EXTRA CUSTOMER" : "ROLL CUSTOMER"}</button><button className="secondary-action" disabled={timeLeft >= 10} onClick={() => setGame(resolveDay(game))}>{game.mode === "extra" ? "FINISH EXTRA SHIFT" : "RESOLVE DAY"}</button></div></section><History items={game.history}/></div>
         </main>
       )}
       {reportOpen && <Report game={game} onClose={() => setReportOpen(false)} />}
