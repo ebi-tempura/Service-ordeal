@@ -76,7 +76,7 @@ export const NON_MONETARY_PUNISHMENTS = {
   2: { title: "Kept in discomfort", instruction: "Wear a buttplug, handcuffs, heels, and collar until tomorrow morning." },
   3: { title: "Corner time", instruction: "Kneel in a corner for 15 minutes. Naked, blindfolded, plugged, and hands cuffed behind your back and feet bound. Hold a ping-pong ball between your nose and the wall. Reset timer if the ball falls" },
   4: { title: "Clamping", instruction: "Hold the selected pose for up to 10 minutes. Plugged and only use heels." },
-  5: { title: "Flight risk", instruction: "Secure an ankle to your bed, Do not free yourself until tomorrow morning" },
+  5: { title: "Bottom UP!", instruction: "Take all remaining fake cum  and pour it into a glass. Slowly sip the cum until you finish it all" },
   6: { title: "Cold shower", instruction: "Take a cold shower after you shift" },
   9: { title: "Dirty day", instruction: "Don't clean yourself until tomorrow morning." },
 };
