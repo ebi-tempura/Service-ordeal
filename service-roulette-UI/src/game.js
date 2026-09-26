@@ -1,11 +1,13 @@
 export const DEBT_TARGET = 1500;
 // Edit these four entries to supply the full jail task text.
+
 export const JAIL_TASKS = {
-  1: "Jail task 1 — add your text here",
-  2: "Jail task 2 — add your text here",
-  3: "Jail task 3 — add your text here",
-  4: "guard bribe",
+  1: "You are raped! Hatefuck your ass for 5 min, then roll again",
+  2: "As 1, but add 5 min of facefucking",
+  3: "As 2, but do it twice",
+  4: "You bribe the guards: do a 5 min blowjob on 2 dildos, then exit",
 };
+
 export const START_GRACE_MINUTES = 5;
 
 export const SHIFTS = {
@@ -83,7 +85,7 @@ export const NON_MONETARY_PUNISHMENTS = {
   2: { title: "Kept in discomfort", instruction: "Wear a buttplug, handcuffs, heels, and collar until tomorrow morning." },
   3: { title: "Corner time", instruction: "Kneel in a corner for 15 minutes. Naked, blindfolded, plugged, and hands cuffed behind your back and feet bound. Hold a ping-pong ball between your nose and the wall. Reset timer if the ball falls" },
   4: { title: "Clamping", instruction: "Hold the selected pose for up to 10 minutes. Plugged and only use heels." },
-  5: { title: "Bottom UP!", instruction: "Take all remaining fake cum  and pour it into a glass. Slowly sip the cum until you finish it all" },
+  5: { title: "Bottom UP!", instruction: "Take all remaining fake cum and pour it into a glass. Slowly sip the cum until you finish it all" },
   6: { title: "Cold shower", instruction: "Take a cold shower after you shift" },
   9: { title: "Dirty day", instruction: "Don't clean yourself until tomorrow morning." },
 };
@@ -210,7 +212,7 @@ export function rollCustomer(game, rng = Math.random, now = new Date()) {
   // One silent, independent 1-in-15 check per regular shift.
   if (game.mode === "regular" && !game.jailChecked) {
     next = { ...game, jailChecked: true };
-    if (Math.floor(rng() * 15) === 0) {
+    if (Math.floor(rng() * 1) === 0) {
       return { ...next, jail: { stage: "raid" }, notice: { kind: "danger", text: "The shift has been interrupted." } };
     }
   }
