@@ -100,6 +100,7 @@ test("daily half-loss happens before the daily fee", () => {
     ...game,
     elapsed: 60,
     dailyEarnings: 400,
+    jailChecked: true,
     scheduleCheckedDate: "2026-09-04",
   };
   game = resolveDay(game, sequence(0.31, 0.71));
@@ -111,7 +112,7 @@ test("daily half-loss happens before the daily fee", () => {
 
 test("paying the debt pauses before the separate release day", () => {
   let game = configureGame(initialGame(), "shift1", "19:30");
-  game = { ...game, elapsed: 60, dailyEarnings: 300, totalEarnings: 1400 };
+  game = { ...game, elapsed: 60, dailyEarnings: 300, totalEarnings: 1400, jailChecked: true };
   game = resolveDay(game, sequence(0.91));
   assert.equal(game.mode, "releaseReady");
   assert.equal(game.releaseDay.tasks.length, 8);
@@ -125,24 +126,36 @@ test("save validation accepts the current state shape", () => {
   assert.equal(validateSave({ version: 1, shiftKey: "wrong", history: [], completedDays: [] }), false);
 });
 
-test("raid happens once per regular shift and pauses the customer", () => {
+test("raid is checked after the shift, not while rolling customers", () => {
   let game = configureGame(initialGame(), "shift1", "19:30");
   game = rollCustomer(game, sequence(0));
+  assert.equal(game.jail, null);
+  game = { ...game, elapsed: 60 };
+  game = resolveDay(game, sequence(0));
   assert.equal(game.jail.stage, "raid");
-  assert.equal(game.history.length, 0);
+  assert.equal(game.history.length, 1);
   game = continueJail(game, sequence(0.51)); // roll 4
   assert.equal(game.jail.roll, 4);
   game = dismissJail(game);
-  game = rollCustomer(game, sequence(0));
-  assert.equal(game.history.length, 1);
   assert.equal(game.jail, null);
+  game = resolveDay(game, sequence(0.91));
+  assert.equal(game.mode, "dayComplete");
 });
 
-test("jail outcomes end the shift, reroll unaffordable payment, and add debt", () => {
+test("jail rolls 1–3 keep the player in jail until a roll of 4–6", () => {
   const base = { ...configureGame(initialGame(), "shift1", "19:30"), jail: { stage: "raid" } };
   const stuck = continueJail(base, sequence(0));
-  assert.equal(stuck.elapsed, 60);
   assert.equal(stuck.jail.roll, 1);
+  assert.equal(dismissJail(stuck), stuck);
+  const again = continueJail(stuck, sequence(0.35)); // roll 3
+  assert.equal(again.jail.roll, 3);
+  const escaped = continueJail(again, sequence(0.51)); // roll 4
+  assert.equal(escaped.jail.roll, 4);
+  assert.equal(escaped.punishmentMessages.length, 3);
+});
+
+test("jail rerolls unaffordable payment and adds debt", () => {
+  const base = { ...configureGame(initialGame(), "shift1", "19:30"), jail: { stage: "raid" } };
   const rerolled = continueJail(base, sequence(0.7, 0.9)); // 5 cannot be paid, then 6
   assert.equal(rerolled.jail.roll, 6);
   assert.equal(rerolled.addedDebt, 250);

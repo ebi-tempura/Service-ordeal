@@ -209,13 +209,6 @@ export function rollCustomer(game, rng = Math.random, now = new Date()) {
     }
   }
   let next = game;
-  // One silent, independent 1-in-15 check per regular shift.
-  if (game.mode === "regular" && !game.jailChecked) {
-    next = { ...game, jailChecked: true };
-    if (Math.floor(rng() * 1) === 0) {
-      return { ...next, jail: { stage: "raid" }, notice: { kind: "danger", text: "The shift has been interrupted." } };
-    }
-  }
   let scheduleReasons = [];
   const todayHasRegular = game.history.some((item) => item.day === game.day && item.phase === "regular");
   if (game.mode === "regular" && !todayHasRegular) {
@@ -271,7 +264,7 @@ export function rollCustomer(game, rng = Math.random, now = new Date()) {
 }
 
 export function continueJail(game, rng = Math.random) {
-  if (game.jail?.stage !== "raid") return game;
+  if (game.jail?.stage !== "raid" && !(game.jail?.stage === "outcome" && game.jail.roll <= 3)) return game;
   let roll = 1 + Math.floor(rng() * 6);
   // A roll of 5 cannot be paid when the available balance is below $250.
   // Rejection sampling is equivalent to rerolling until a valid outcome appears.
@@ -280,16 +273,15 @@ export function continueJail(game, rng = Math.random) {
   return {
     ...game,
     jail: { stage: "outcome", roll },
-    elapsed: stuck ? SHIFTS[game.shiftKey].minutes : game.elapsed,
     dailyEarnings: roll === 5 ? game.dailyEarnings - 250 : game.dailyEarnings,
     addedDebt: (game.addedDebt || 0) + (roll === 6 ? 250 : 0),
     punishmentMessages: [...game.punishmentMessages, `Police raid · Roll ${roll}: ${stuck ? JAIL_TASKS[roll] : roll === 4 ? JAIL_TASKS[4] : roll === 5 ? "Paid $250" : "$250 added to debt"}.`],
-    notice: { kind: "danger", text: stuck ? "Stuck in jail for this shift." : "Jail consequence resolved." },
+    notice: { kind: "danger", text: stuck ? "Still in jail. Complete the task and roll again." : "Jail consequence resolved." },
   };
 }
 
 export function dismissJail(game) {
-  if (game.jail?.stage !== "outcome") return game;
+  if (game.jail?.stage !== "outcome" || game.jail.roll <= 3) return game;
   return { ...game, jail: null };
 }
 
@@ -361,6 +353,15 @@ export function resolveDay(game, rng = Math.random, now = new Date()) {
   }
   if (game.mode === "regular") {
     if (remainingTime(game) >= 10) return { ...game, notice: { kind: "info", text: "There is still time for another customer." } };
+    if (game.jail) return game;
+    // Hidden check at the end of each regular shift; change 1 to 15 for 1-in-15 odds.
+    if (!game.jailChecked) {
+      const checked = { ...game, jailChecked: true };
+      if (Math.floor(rng() * 1) === 0) {
+        return { ...checked, jail: { stage: "raid" }, notice: { kind: "danger", text: "The shift has been interrupted." } };
+      }
+      game = checked;
+    }
     const shift = SHIFTS[game.shiftKey];
     const reasons = [...game.extraPunishmentReasons];
     if (game.dailyEarnings < shift.dailyFee) {
