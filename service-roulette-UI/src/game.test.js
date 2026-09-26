@@ -20,9 +20,9 @@ const sequence = (...values) => {
 
 test("fee table and grace period match the game rules", () => {
   assert.equal(START_GRACE_MINUTES, 5);
-  assert.deepEqual(SHIFTS.shift1, { label: "Shift 1", minutes: 60, dailyFee: 120, extraFee: 90 });
-  assert.deepEqual(SHIFTS.shift2, { label: "Shift 2", minutes: 120, dailyFee: 320, extraFee: 240 });
-  assert.deepEqual(SHIFTS.shift3, { label: "Shift 3", minutes: 180, dailyFee: 520, extraFee: 390 });
+  assert.deepEqual(SHIFTS.shift1, { label: "Shift 1", minutes: 60, dailyFee: 1200, extraFee: 900 });
+  assert.deepEqual(SHIFTS.shift2, { label: "Shift 2", minutes: 120, dailyFee: 2400, extraFee: 1800 });
+  assert.deepEqual(SHIFTS.shift3, { label: "Shift 3", minutes: 180, dailyFee: 3600, extraFee: 2100 });
 });
 
 test("customer rolls never exceed the selected shift", () => {
@@ -94,28 +94,38 @@ test("service half-pay and rest probabilities remain near their targets", () => 
   assert.ok(rests / runs > 0.53 && rests / runs < 0.58);
 });
 
+test("anal tasks show distinct positions and oral tasks do not", () => {
+  const game = configureGame(initialGame(), "shift3", "19:30");
+  const tasks = rollCustomer(game, sequence(0)).currentService.tasks; // demanding customer
+  const anal = tasks.filter((task) => task.kind === "anal");
+  assert.equal(new Set(anal.map((task) => task.positionRoll)).size, 2);
+  assert.ok(anal.every((task) => task.position && task.positionRoll >= 1 && task.positionRoll <= 20));
+  assert.ok(tasks.filter((task) => task.kind === "oral").every((task) => !task.position));
+});
+
 test("daily half-loss happens before the daily fee", () => {
   let game = configureGame(initialGame(), "shift1", "19:30");
   game = {
     ...game,
     elapsed: 60,
-    dailyEarnings: 400,
+    dailyEarnings: 4000,
     jailChecked: true,
     scheduleCheckedDate: "2026-09-04",
   };
   game = resolveDay(game, sequence(0.31, 0.71));
-  assert.equal(game.completedDays[0].afterPunishment, 200);
-  assert.equal(game.completedDays[0].net, 80);
-  assert.equal(game.totalEarnings, 80);
+  assert.equal(game.completedDays[0].afterPunishment, 2000);
+  assert.equal(game.completedDays[0].net, 800);
+  assert.equal(game.totalEarnings, 800);
   assert.equal(game.mode, "dayComplete");
 });
 
 test("paying the debt pauses before the separate release day", () => {
   let game = configureGame(initialGame(), "shift1", "19:30");
-  game = { ...game, elapsed: 60, dailyEarnings: 300, totalEarnings: 1400, jailChecked: true };
+  game = { ...game, elapsed: 60, dailyEarnings: 3000, totalEarnings: 14000, jailChecked: true };
   game = resolveDay(game, sequence(0.91));
   assert.equal(game.mode, "releaseReady");
   assert.equal(game.releaseDay.tasks.length, 8);
+  assert.equal(new Set(game.releaseDay.tasks.filter((task) => task.kind === "anal").map((task) => task.positionRoll)).size, 4);
   game = resolveDay(game);
   assert.equal(game.mode, "release");
 });
@@ -158,7 +168,7 @@ test("jail rerolls unaffordable payment and adds debt", () => {
   const base = { ...configureGame(initialGame(), "shift1", "19:30"), jail: { stage: "raid" } };
   const rerolled = continueJail(base, sequence(0.7, 0.9)); // 5 cannot be paid, then 6
   assert.equal(rerolled.jail.roll, 6);
-  assert.equal(rerolled.addedDebt, 250);
-  const paid = continueJail({ ...base, dailyEarnings: 300 }, sequence(0.7));
-  assert.equal(paid.dailyEarnings, 50);
+  assert.equal(rerolled.addedDebt, 2500);
+  const paid = continueJail({ ...base, totalEarnings: 3000 }, sequence(0.7));
+  assert.equal(paid.totalEarnings, 500);
 });

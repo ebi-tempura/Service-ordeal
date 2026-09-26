@@ -171,9 +171,12 @@ export function configureGame(game, shiftKey, scheduledStart, enforceStartTime =
   };
 }
 
-function taskFor(kind, value) {
+function taskFor(kind, value, availablePositions, rng) {
   const lookup = kind === "oral" ? ORAL_TASKS : ANAL_TASKS;
-  return { kind, roll: value, text: lookup[value] };
+  if (kind !== "anal") return { kind, roll: value, text: lookup[value] };
+  const index = Math.floor(rng() * availablePositions.length);
+  const positionRoll = availablePositions.splice(index, 1)[0];
+  return { kind, roll: value, text: lookup[value], positionRoll, position: POSITIONS_SHIFT[positionRoll] };
 }
 
 export function remainingTime(game) {
@@ -249,7 +252,8 @@ export function rollCustomer(game, rng = Math.random, now = new Date()) {
   const orderedRolls = { S: rolls.S, T: rolls.T, U: rolls.U, V: rolls.V, W: rolls.W, X: rolls.X, Y: rolls.Y, Z: rolls.Z };
   const size = [1, 2, 3].includes(rolls.T) ? "Small" : [4, 5, 6, 7].includes(rolls.T) ? "Medium" : "Large";
   const taskRolls = [rolls.V, rolls.W, rolls.X, rolls.Y];
-  const tasks = customer.tasks.map((kind, index) => taskFor(kind, taskRolls[index]));
+  const availablePositions = Object.keys(POSITIONS_SHIFT).map(Number);
+  const tasks = customer.tasks.map((kind, index) => taskFor(kind, taskRolls[index], availablePositions, rng));
   const halfPay = roll10(rng) < 2;
   const money = customer.money * (halfPay ? 0.5 : 1);
   const restRoll = 1 + Math.floor(rng() * 9);
@@ -426,12 +430,13 @@ function releaseRoll(rng) {
   const rolls = {};
   for (const letter of "RSTUVWXYZ") rolls[letter] = roll10(rng);
   const kinds = ["oral", "anal", "anal", "oral", "oral", "anal", "anal", "oral"];
+  const availablePositions = Object.keys(POSITIONS_SHIFT).map(Number);
   return {
     customer: "Pimp's associate",
     dildoSize: "Large",
     kink: "None",
     rolls,
-    tasks: kinds.map((kind, index) => taskFor(kind, rolls["RSTUVWXY"[index]])),
+    tasks: kinds.map((kind, index) => taskFor(kind, rolls["RSTUVWXY"[index]], availablePositions, rng)),
     cumshot: CHEST_MOUTH_FACE[rolls.Z],
   };
 }

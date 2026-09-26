@@ -101,6 +101,7 @@ function ServiceCard({ service, mode }) {
           <article className="task-card" key={`${task.kind}-${index}`}>
             <span>TASK {index + 1} · {task.kind.toUpperCase()} #{task.roll}</span>
             <p>{task.text}</p>
+            {task.position && <p className="task-position"><strong>POSITION #{task.positionRoll}</strong> · {task.position}</p>}
           </article>
         ))}
       </div>
@@ -167,7 +168,7 @@ function ReleaseDay({ game, onOverview, onReport }) {
       <div className="summary-tabs"><button onClick={onOverview}>Final day overview</button><button className="active">Release day</button><button className="report-link" onClick={onReport}>View full report</button></div>
       <section className="release-panel">
         <div className="release-title"><div><span className="eyebrow">FINAL STAGE</span><h1>Pimp's associate</h1><p>Large dildo · No kink · Separate from final-day earnings</p></div><div className="release-dice">{Object.entries(release.rolls).map(([key, value]) => <span key={key}>{key}<b>{value}</b></span>)}</div></div>
-        <div className="release-tasks">{release.tasks.map((task, index) => <article key={index}><span>TASK {index + 1} · {task.kind.toUpperCase()} #{task.roll}</span><p>{task.text}</p></article>)}</div>
+        <div className="release-tasks">{release.tasks.map((task, index) => <article key={index}><span>TASK {index + 1} · {task.kind.toUpperCase()} #{task.roll}</span><p>{task.text}</p>{task.position && <p className="task-position"><strong>POSITION #{task.positionRoll}</strong> · {task.position}</p>}</article>)}</div>
         <div className="release-outcome"><span>FINAL OUTCOME</span><strong>{release.cumshot}</strong></div>
       </section>
     </div>
