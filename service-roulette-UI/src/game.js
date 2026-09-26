@@ -1,4 +1,11 @@
 export const DEBT_TARGET = 1500;
+// Edit these four entries to supply the full jail task text.
+export const JAIL_TASKS = {
+  1: "Jail task 1 — add your text here",
+  2: "Jail task 2 — add your text here",
+  3: "Jail task 3 — add your text here",
+  4: "guard bribe",
+};
 export const START_GRACE_MINUTES = 5;
 
 export const SHIFTS = {
@@ -110,6 +117,9 @@ export function initialGame() {
     dailyExtraGross: 0,
     dailyExtraFees: 0,
     totalEarnings: 0,
+    addedDebt: 0,
+    jailChecked: false,
+    jail: null,
     punishmentBalance: 0,
     pendingPunishments: [],
     punishmentMessages: [],
@@ -177,6 +187,7 @@ function schedulePenalties(game, now) {
 
 export function rollCustomer(game, rng = Math.random, now = new Date()) {
   if (!["regular", "extra"].includes(game.mode)) return game;
+  if (game.jail) return game;
   if (game.mode === "regular" && game.enforceStartTime) {
     const today = localDate(now);
     if (game.lastCompletedDate === today) {
@@ -196,10 +207,17 @@ export function rollCustomer(game, rng = Math.random, now = new Date()) {
     }
   }
   let next = game;
+  // One silent, independent 1-in-15 check per regular shift.
+  if (game.mode === "regular" && !game.jailChecked) {
+    next = { ...game, jailChecked: true };
+    if (Math.floor(rng() * 15) === 0) {
+      return { ...next, jail: { stage: "raid" }, notice: { kind: "danger", text: "The shift has been interrupted." } };
+    }
+  }
   let scheduleReasons = [];
   const todayHasRegular = game.history.some((item) => item.day === game.day && item.phase === "regular");
   if (game.mode === "regular" && !todayHasRegular) {
-    ({ game: next, reasons: scheduleReasons } = schedulePenalties(game, now));
+    ({ game: next, reasons: scheduleReasons } = schedulePenalties(next, now));
   }
   const remaining = remainingTime(next);
   const customer = choose(Object.values(CUSTOMERS), rng);
@@ -248,6 +266,29 @@ export function rollCustomer(game, rng = Math.random, now = new Date()) {
       text: `${result.customer} completed · +$${money} · ${result.totalMinutes} min · ${remaining - result.totalMinutes} min left.${penaltyText}`,
     },
   };
+}
+
+export function continueJail(game, rng = Math.random) {
+  if (game.jail?.stage !== "raid") return game;
+  let roll = 1 + Math.floor(rng() * 6);
+  // A roll of 5 cannot be paid when the available balance is below $250.
+  // Rejection sampling is equivalent to rerolling until a valid outcome appears.
+  while (roll === 5 && game.totalEarnings + game.dailyEarnings < 250) roll = 1 + Math.floor(rng() * 6);
+  const stuck = roll <= 3;
+  return {
+    ...game,
+    jail: { stage: "outcome", roll },
+    elapsed: stuck ? SHIFTS[game.shiftKey].minutes : game.elapsed,
+    dailyEarnings: roll === 5 ? game.dailyEarnings - 250 : game.dailyEarnings,
+    addedDebt: (game.addedDebt || 0) + (roll === 6 ? 250 : 0),
+    punishmentMessages: [...game.punishmentMessages, `Police raid · Roll ${roll}: ${stuck ? JAIL_TASKS[roll] : roll === 4 ? JAIL_TASKS[4] : roll === 5 ? "Paid $250" : "$250 added to debt"}.`],
+    notice: { kind: "danger", text: stuck ? "Stuck in jail for this shift." : "Jail consequence resolved." },
+  };
+}
+
+export function dismissJail(game) {
+  if (game.jail?.stage !== "outcome") return game;
+  return { ...game, jail: null };
 }
 
 function punishmentRolls(rng) {
@@ -385,7 +426,7 @@ function completeDay(game, rng) {
     events: game.punishmentMessages.length ? game.punishmentMessages : ["No punishment today."],
     completedDate: localDate(),
   };
-  const debtPaid = totalEarnings >= DEBT_TARGET;
+  const debtPaid = totalEarnings >= DEBT_TARGET + (game.addedDebt || 0);
   return {
     ...game,
     day: game.day + 1,
@@ -400,6 +441,8 @@ function completeDay(game, rng) {
     pendingPunishments: [],
     punishmentMessages: [],
     extraPunishmentReasons: [],
+    jailChecked: false,
+    jail: null,
     scheduleCheckedDate: null,
     lastCompletedDate: localDate(),
     completedDays: [...game.completedDays, summary],

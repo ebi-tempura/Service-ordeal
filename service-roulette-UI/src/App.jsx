@@ -3,6 +3,9 @@ import {
   DEBT_TARGET,
   SHIFTS,
   configureGame,
+  continueJail,
+  dismissJail,
+  JAIL_TASKS,
   financialStats,
   initialGame,
   remainingTime,
@@ -259,7 +262,8 @@ export default function App() {
   const importRef = useRef(null);
   const shift = SHIFTS[game.shiftKey];
   const timeLeft = game.configured ? remainingTime(game) : 0;
-  const debtLeft = Math.max(0, DEBT_TARGET - game.totalEarnings);
+  const debtTarget = DEBT_TARGET + (game.addedDebt || 0);
+  const debtLeft = Math.max(0, debtTarget - game.totalEarnings);
 
   useEffect(() => { localStorage.setItem(SAVE_KEY, JSON.stringify(game)); }, [game]);
   useEffect(() => { if (game.mode === "releaseReady") setSummaryTab("overview"); if (game.mode === "release") setSummaryTab("release"); }, [game.mode]);
@@ -302,11 +306,27 @@ export default function App() {
         <main className="game-shell">
           <Notification notice={game.notice} />
           <div className="stats-row"><StatCard label="DAY" value={game.day}/><StatCard label="TIME LEFT" value={`${timeLeft} min`}/><StatCard label="DAY GROSS" value={money(game.mode === "extra" ? game.extraEarnings : game.dailyEarnings)} tone="green"/><StatCard label="RUN TOTAL" value={money(game.totalEarnings)} tone="green"/><StatCard label="DEBT LEFT" value={money(debtLeft)} tone="pink"/></div>
-          <div className="progress-row"><Progress label="SHIFT PROGRESS" value={game.elapsed/shift.minutes*100} detail={`${game.elapsed} / ${shift.minutes} min`} tone="purple"/><Progress label="DEBT PROGRESS" value={game.totalEarnings/DEBT_TARGET*100} detail={`${Math.max(0, game.totalEarnings/DEBT_TARGET*100).toFixed(0)}% paid`} /></div>
+          <div className="progress-row"><Progress label="SHIFT PROGRESS" value={game.elapsed/shift.minutes*100} detail={`${game.elapsed} / ${shift.minutes} min`} tone="purple"/><Progress label="DEBT PROGRESS" value={game.totalEarnings/debtTarget*100} detail={`${Math.max(0, game.totalEarnings/debtTarget*100).toFixed(0)}% paid`} /></div>
           <div className="play-grid"><section className="service-panel"><ServiceCard service={game.currentService} mode={game.mode}/><div className="game-actions"><button className="primary-action" disabled={timeLeft < 10} onClick={handleRollCustomer}>{game.mode === "extra" ? "ROLL EXTRA CUSTOMER" : "ROLL CUSTOMER"}</button><button className="secondary-action" disabled={timeLeft >= 10} onClick={() => setGame(resolveDay(game))}>{game.mode === "extra" ? "FINISH EXTRA SHIFT" : "RESOLVE DAY"}</button></div></section><History items={game.history}/></div>
         </main>
       )}
       {reportOpen && <Report game={game} onClose={() => setReportOpen(false)} />}
+      {game.jail && <div className="jail-overlay" role="dialog" aria-modal="true" aria-label="Police raid">
+        <div className="jail-lights" aria-hidden="true" />
+        <div className="jail-card" key={game.jail.stage}>
+          {game.jail.stage === "raid" ? <>
+            <div className="jail-raid-title">POLICE RAID</div>
+            <div className="jail-bars" aria-hidden="true" />
+            <h2>You’ve been arrested.</h2>
+            <button className="primary-action" onClick={() => setGame((current) => continueJail(current))}>CONTINUE →</button>
+          </> : <>
+            <span className="eyebrow">JAIL · ROLL {game.jail.roll}</span>
+            <h2>{game.jail.roll <= 3 ? "Stuck in jail for this shift" : game.jail.roll === 4 ? "You escaped" : game.jail.roll === 5 ? "Pay $250" : "$250 added to your debt"}</h2>
+            {game.jail.roll <= 4 && <p>{JAIL_TASKS[game.jail.roll]}</p>}
+            <button className="primary-action" onClick={() => setGame((current) => dismissJail(current))}>CONTINUE →</button>
+          </>}
+        </div>
+      </div>}
     </div>
   );
 }

@@ -4,6 +4,8 @@ import {
   SHIFTS,
   START_GRACE_MINUTES,
   configureGame,
+  continueJail,
+  dismissJail,
   initialGame,
   remainingTime,
   resolveDay,
@@ -27,7 +29,7 @@ test("customer rolls never exceed the selected shift", () => {
   let game = configureGame(initialGame(), "shift1", "19:30");
   game = { ...game, scheduleCheckedDate: "2026-09-04" };
   const now = new Date("2026-09-04T19:31:00");
-  while (remainingTime(game) >= 10) game = rollCustomer(game, Math.random, now);
+  while (remainingTime(game) >= 10) game = rollCustomer(game, sequence(0.5), now);
   assert.ok(game.elapsed <= 60);
   assert.ok(remainingTime(game) < 10);
 });
@@ -39,7 +41,7 @@ test("customer selection gives every S-roll customer one equal slot", () => {
     let calls = 0;
     const rng = () => calls++ === 0 ? (index + 0.1) / 10 : 0.5;
     let game = configureGame(initialGame(), "shift3", "19:30");
-    game = { ...game, scheduleCheckedDate: "2026-09-04" };
+    game = { ...game, scheduleCheckedDate: "2026-09-04", jailChecked: true };
     game = rollCustomer(game, rng, now);
     codes.push(game.currentService.customerCode);
   }
@@ -83,7 +85,7 @@ test("service half-pay and rest probabilities remain near their targets", () => 
   const now = new Date("2026-09-04T19:31:00");
   for (let index = 0; index < runs; index += 1) {
     let game = configureGame(initialGame(), "shift3", "19:30");
-    game = { ...game, scheduleCheckedDate: "2026-09-04" };
+    game = { ...game, scheduleCheckedDate: "2026-09-04", jailChecked: true };
     game = rollCustomer(game, Math.random, now);
     half += Number(game.currentService.halfPay);
     rests += Number(game.currentService.restMinutes === 5);
@@ -121,4 +123,29 @@ test("save validation accepts the current state shape", () => {
   const game = configureGame(initialGame(), "shift2", "08:00");
   assert.equal(validateSave(game), true);
   assert.equal(validateSave({ version: 1, shiftKey: "wrong", history: [], completedDays: [] }), false);
+});
+
+test("raid happens once per regular shift and pauses the customer", () => {
+  let game = configureGame(initialGame(), "shift1", "19:30");
+  game = rollCustomer(game, sequence(0));
+  assert.equal(game.jail.stage, "raid");
+  assert.equal(game.history.length, 0);
+  game = continueJail(game, sequence(0.51)); // roll 4
+  assert.equal(game.jail.roll, 4);
+  game = dismissJail(game);
+  game = rollCustomer(game, sequence(0));
+  assert.equal(game.history.length, 1);
+  assert.equal(game.jail, null);
+});
+
+test("jail outcomes end the shift, reroll unaffordable payment, and add debt", () => {
+  const base = { ...configureGame(initialGame(), "shift1", "19:30"), jail: { stage: "raid" } };
+  const stuck = continueJail(base, sequence(0));
+  assert.equal(stuck.elapsed, 60);
+  assert.equal(stuck.jail.roll, 1);
+  const rerolled = continueJail(base, sequence(0.7, 0.9)); // 5 cannot be paid, then 6
+  assert.equal(rerolled.jail.roll, 6);
+  assert.equal(rerolled.addedDebt, 250);
+  const paid = continueJail({ ...base, dailyEarnings: 300 }, sequence(0.7));
+  assert.equal(paid.dailyEarnings, 50);
 });
