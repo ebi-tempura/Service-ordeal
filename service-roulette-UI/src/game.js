@@ -1,11 +1,11 @@
-export const DEBT_TARGET = 1500;
+export const DEBT_TARGET = 15000;
 // Edit these four entries to supply the full jail task text.
 
 export const JAIL_TASKS = {
-  1: "You are raped! Hatefuck your ass for 5 min, then roll again",
-  2: "As 1, but add 5 min of facefucking",
-  3: "As 2, but do it twice",
-  4: "You bribe the guards: do a 5 min blowjob on 2 dildos, then exit",
+  1: "You are raped! Hate fuck your ass for 5 min, then roll again",
+  2: "You are raped! Hate fuck your ass for 5 min and add 5 min of face fucking then roll again",
+  3: "Spank your ass 20 times each cheek with a stick",
+  4: "You bribe whoring yourself to the guards: do a 5 min blowjob on 2 dildos, then exit",
 };
 
 export const START_GRACE_MINUTES = 5;
@@ -42,6 +42,30 @@ const ANAL_TASKS = {
   0: "Fuck fast and deep for 5 minutes, fully out and back in on each stroke, pausing 5 times to deepthroat",
 };
 
+
+const POSITIONS_SHIFT={
+  1: "Laying on back, legs apart in the air", 
+  2: "Laying on back, legs together in the air", 
+  3: "Laying on back, legs behind your head", 
+  4: "Laying on the side, legs down",
+  5: "Laying on the side, one leg up", 
+  6: "Laying on stomach, pillow under the hips ", 
+  7: "Cowgirl, hands behind back on the ground", 
+  8: "Cowgirl, hands free",
+  9: "Reverse cowgirl", 
+  10: "Doggystyle",
+  11: "Doggystyle, dildo mounted", 
+  12: "FDAU!", 
+  13: "Bent over something", 
+  14: "Standing",
+  15: "Standing one leg", 
+  16: "Standing dildo mounted on wall", 
+  17: "Dildo mounted on chair or smth with similar height", 
+  18: "Dildo mounted on chair with one leg on chair or smth with similar height",
+  19: "Dildo mounted on chair, legs in the air", 
+  20: "Dildo mounted on chair, legs sideways on the ground"
+}
+
 const KINKS = {
   1: "Blindfold", 2: "Body Writing", 3: "Handcuffs", 4: "Handcuffs",
   5: "Plug", 6: "Plug", 7: "Spread Ass", 8: "Strip Dance",
@@ -66,16 +90,16 @@ const ASS_FACE = {
 };
 
 export const CUSTOMERS = {
-  1: { code: 1, name: "Oral guy", tasks: ["oral", "oral"], cumshot: CHEST_MOUTH_FACE, money: 40 },
-  2: { code: 2, name: "Anal guy", tasks: ["anal", "anal"], cumshot: ASS_OR_IN_ASS, money: 60 },
-  3: { code: 3, name: "Regular guy", tasks: ["oral", "anal"], cumshot: ASS_OR_IN_ASS, money: 60 },
-  4: { code: 4, name: "Ass-to-mouth guy", tasks: ["anal", "oral"], cumshot: CHEST_MOUTH_FACE, money: 80 },
-  5: { code: 5, name: "Oral connoisseur", tasks: ["oral", "oral", "oral"], cumshot: CHEST_FACE, money: 40 },
-  6: { code: 6, name: "Anal connoisseur", tasks: ["anal", "anal", "anal"], cumshot: ASS_OR_IN_ASS, money: 60 },
-  7: { code: 7, name: "Ass-to-mouth lover", tasks: ["oral", "anal", "oral"], cumshot: CHEST_FACE, money: 80 },
-  8: { code: 8, name: "Man with stamina", tasks: ["oral", "anal", "anal"], cumshot: ASS_OR_IN_ASS, money: 60 },
-  9: { code: 9, name: "Man with patience", tasks: ["oral", "oral", "anal"], cumshot: ASS_FACE, money: 60 },
-  0: { code: 0, name: "Demanding customer", tasks: ["oral", "anal", "oral", "anal"], cumshot: ASS_FACE, money: 80 },
+  1: { code: 1, name: "Oral guy", tasks: ["oral", "oral"], cumshot: CHEST_MOUTH_FACE, money: 400 },
+  2: { code: 2, name: "Anal guy", tasks: ["anal", "anal"], cumshot: ASS_OR_IN_ASS, money: 600 },
+  3: { code: 3, name: "Regular guy", tasks: ["oral", "anal"], cumshot: ASS_OR_IN_ASS, money: 600 },
+  4: { code: 4, name: "Ass-to-mouth guy", tasks: ["anal", "oral"], cumshot: CHEST_MOUTH_FACE, money: 800 },
+  5: { code: 5, name: "Oral connoisseur", tasks: ["oral", "oral", "oral"], cumshot: CHEST_FACE, money: 400 },
+  6: { code: 6, name: "Anal connoisseur", tasks: ["anal", "anal", "anal"], cumshot: ASS_OR_IN_ASS, money: 600 },
+  7: { code: 7, name: "Ass-to-mouth lover", tasks: ["oral", "anal", "oral"], cumshot: CHEST_FACE, money: 800 },
+  8: { code: 8, name: "Man with stamina", tasks: ["oral", "anal", "anal"], cumshot: ASS_OR_IN_ASS, money: 600 },
+  9: { code: 9, name: "Man with patience", tasks: ["oral", "oral", "anal"], cumshot: ASS_FACE, money: 600 },
+  0: { code: 0, name: "Demanding customer", tasks: ["oral", "anal", "oral", "anal"], cumshot: ASS_FACE, money: 800 },
 };
 
 const PACKAGES = { A: [1, 2, 3, 4], B: [5, 6, 7, 8, 9], C: [0] };
@@ -266,16 +290,16 @@ export function rollCustomer(game, rng = Math.random, now = new Date()) {
 export function continueJail(game, rng = Math.random) {
   if (game.jail?.stage !== "raid" && !(game.jail?.stage === "outcome" && game.jail.roll <= 3)) return game;
   let roll = 1 + Math.floor(rng() * 6);
-  // A roll of 5 cannot be paid when the available balance is below $250.
+  // A roll of 5 cannot be paid when the available balance is below $2500.
   // Rejection sampling is equivalent to rerolling until a valid outcome appears.
-  while (roll === 5 && game.totalEarnings + game.dailyEarnings < 250) roll = 1 + Math.floor(rng() * 6);
+  while (roll === 5 && game.totalEarnings < 2500) roll = 1 + Math.floor(rng() * 6);
   const stuck = roll <= 3;
   return {
     ...game,
     jail: { stage: "outcome", roll },
-    dailyEarnings: roll === 5 ? game.dailyEarnings - 250 : game.dailyEarnings,
-    addedDebt: (game.addedDebt || 0) + (roll === 6 ? 250 : 0),
-    punishmentMessages: [...game.punishmentMessages, `Police raid · Roll ${roll}: ${stuck ? JAIL_TASKS[roll] : roll === 4 ? JAIL_TASKS[4] : roll === 5 ? "Paid $250" : "$250 added to debt"}.`],
+    totalEarnings: roll === 5 ? game.totalEarnings - 2500 : game.totalEarnings,
+    addedDebt: (game.addedDebt || 0) + (roll === 6 ? 2500 : 0),
+    punishmentMessages: [...game.punishmentMessages, `Police raid · Roll ${roll}: ${stuck ? JAIL_TASKS[roll] : roll === 4 ? JAIL_TASKS[4] : roll === 5 ? "You paid $2500 of bail" : "Your Pimp bails you out! $2500 added to debt"}.`],
     notice: { kind: "danger", text: stuck ? "Still in jail. Complete the task and roll again." : "Jail consequence resolved." },
   };
 }
@@ -357,7 +381,7 @@ export function resolveDay(game, rng = Math.random, now = new Date()) {
     // Hidden check at the end of each regular shift; change 1 to 15 for 1-in-15 odds.
     if (!game.jailChecked) {
       const checked = { ...game, jailChecked: true };
-      if (Math.floor(rng() * 1) === 0) {
+      if (Math.floor(rng() * 10) === 0) {
         return { ...checked, jail: { stage: "raid" }, notice: { kind: "danger", text: "The shift has been interrupted." } };
       }
       game = checked;

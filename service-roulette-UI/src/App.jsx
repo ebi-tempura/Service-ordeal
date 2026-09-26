@@ -321,7 +321,7 @@ export default function App() {
             <button className="primary-action" onClick={() => setGame((current) => continueJail(current))}>CONTINUE →</button>
           </> : <>
             <span className="eyebrow">JAIL · ROLL {game.jail.roll}</span>
-            <h2>{game.jail.roll <= 3 ? "Still in jail" : game.jail.roll === 4 ? "You escaped" : game.jail.roll === 5 ? "Pay $250" : "$250 added to your debt"}</h2>
+            <h2>{game.jail.roll <= 3 ? "Still in jail" : game.jail.roll === 4 ? "You whore yourself out" : game.jail.roll === 5 ? "Pay your bail for $250" : "Your pimp bails you out, $250 added to your debt"}</h2>
             {game.jail.roll <= 4 && <p>{JAIL_TASKS[game.jail.roll]}</p>}
             <button className="primary-action" onClick={() => setGame((current) => current.jail?.roll <= 3 ? continueJail(current) : dismissJail(current))}>{game.jail.roll <= 3 ? "TASK COMPLETE · ROLL AGAIN →" : "CONTINUE →"}</button>
           </>}
