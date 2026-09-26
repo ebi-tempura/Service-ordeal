@@ -11,9 +11,9 @@ export const JAIL_TASKS = {
 export const START_GRACE_MINUTES = 5;
 
 export const SHIFTS = {
-  shift1: { label: "Shift 1", minutes: 60, dailyFee: 120, extraFee: 90 },
-  shift2: { label: "Shift 2", minutes: 120, dailyFee: 320, extraFee: 240 },
-  shift3: { label: "Shift 3", minutes: 180, dailyFee: 520, extraFee: 390 },
+  shift1: { label: "Shift 1", minutes: 60, dailyFee: 1200, extraFee: 900 },
+  shift2: { label: "Shift 2", minutes: 120, dailyFee: 2400, extraFee: 1800 },
+  shift3: { label: "Shift 3", minutes: 180, dailyFee: 3600, extraFee: 2100 },
 };
 
 const ORAL_TASKS = {
