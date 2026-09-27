@@ -51,7 +51,7 @@ const POSITIONS_SHIFT={
   5: "Laying on the side, one leg up", 
   6: "Laying on stomach, pillow under the hips ", 
   7: "Cowgirl, hands behind back on the ground", 
-  8: "Cowgirl, hands free",
+  8: "Cowgirl, squat and bounce",
   9: "Reverse cowgirl", 
   10: "Doggystyle",
   11: "Doggystyle, dildo mounted", 
@@ -62,8 +62,8 @@ const POSITIONS_SHIFT={
   16: "Standing dildo mounted on wall", 
   17: "Dildo mounted on chair or smth with similar height", 
   18: "Dildo mounted on chair with one leg on chair or smth with similar height",
-  19: "Dildo mounted on chair, legs in the air", 
-  20: "Dildo mounted on chair, legs sideways on the ground"
+  19: "On chair, legs in the air", 
+  20: "On chair, legs sideways on the ground"
 }
 
 const KINKS = {
@@ -385,7 +385,7 @@ export function resolveDay(game, rng = Math.random, now = new Date()) {
     // Hidden check at the end of each regular shift; change 1 to 15 for 1-in-15 odds.
     if (!game.jailChecked) {
       const checked = { ...game, jailChecked: true };
-      if (Math.floor(rng() * 10) === 0) {
+      if (Math.floor(rng() * 7) === 0) {
         return { ...checked, jail: { stage: "raid" }, notice: { kind: "danger", text: "The shift has been interrupted." } };
       }
       game = checked;
