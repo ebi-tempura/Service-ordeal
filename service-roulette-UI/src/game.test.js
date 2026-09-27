@@ -10,6 +10,7 @@ import {
   remainingTime,
   resolveDay,
   rollCustomer,
+  runProgress,
   validateSave,
 } from "./game.js";
 
@@ -171,4 +172,37 @@ test("jail rerolls unaffordable payment and adds debt", () => {
   assert.equal(rerolled.addedDebt, 2500);
   const paid = continueJail({ ...base, totalEarnings: 3000 }, sequence(0.7));
   assert.equal(paid.totalEarnings, 500);
+});
+
+test("run progress records actual balance after bail and added debt", () => {
+  let game = {
+    ...configureGame(initialGame(), "shift1", "19:30"),
+    elapsed: 60, dailyEarnings: 3000, totalEarnings: 5000,
+    jailChecked: true, jail: { stage: "raid" },
+  };
+  game = dismissJail(continueJail(game, sequence(0.7))); // roll 5: pay bail
+  assert.equal(game.totalEarnings, 2500);
+  game = resolveDay(game, sequence(0.91)); // no regular punishments
+  assert.equal(game.completedDays[0].runTotal, 4300);
+  assert.equal(game.completedDays[0].debtRemaining, 10700);
+  assert.equal(runProgress(game)[0].runTotal, game.totalEarnings);
+  assert.ok(game.completedDays[0].events.some((event) => event.includes("bail")));
+
+  const withDebt = { ...game, completedDays: [], day: 1, mode: "regular", elapsed: 60, dailyEarnings: 3000, jailChecked: true, addedDebt: 2500 };
+  const next = resolveDay(withDebt, sequence(0.91));
+  assert.equal(next.completedDays[0].debtTarget, 17500);
+  assert.equal(next.completedDays[0].debtRemaining, 17500 - next.totalEarnings);
+});
+
+test("older saves show the real latest balance with estimated earlier days", () => {
+  const game = {
+    ...configureGame(initialGame(), "shift1", "19:30"),
+    totalEarnings: 1800, addedDebt: 2500,
+    completedDays: [{ day: 1, net: 2000 }, { day: 2, net: 2300 }],
+  };
+  const points = runProgress(game);
+  assert.equal(points[0].runTotal, 2000);
+  assert.equal(points[1].runTotal, 1800);
+  assert.equal(points[1].debtRemaining, 15700);
+  assert.ok(points.every((point) => point.estimated));
 });

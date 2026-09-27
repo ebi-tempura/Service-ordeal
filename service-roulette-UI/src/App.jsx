@@ -11,6 +11,7 @@ import {
   remainingTime,
   resolveDay,
   rollCustomer,
+  runProgress,
   validateSave,
 } from "./game.js";
 
@@ -175,19 +176,22 @@ function ReleaseDay({ game, onOverview, onReport }) {
   );
 }
 
-function MoneyChart({ days }) {
+function MoneyChart({ game }) {
+  const days = game.completedDays;
   if (!days.length) return null;
   const width = 900, height = 360, left = 62, right = 838, top = 34, bottom = 298;
-  let running = 0;
-  const values = days.map((day) => {
-    running += day.net;
-    return { ...day, cumulative: running, loss: Math.max(0, day.gross - day.extraFees - day.afterPunishment), fees: day.dailyFee + day.extraFees };
-  });
+  const progress = runProgress(game);
+  const values = days.map((day, index) => ({
+    ...day, cumulative: progress[index].runTotal,
+    debtRemaining: progress[index].debtRemaining,
+    loss: Math.max(0, day.gross - day.extraFees - day.afterPunishment),
+    fees: day.dailyFee + day.extraFees,
+  }));
   const dailyMin = Math.min(0, ...values.flatMap((day) => [day.net, day.gross - day.loss - day.fees]));
   const dailyMax = Math.max(1, ...values.map((day) => day.gross));
   const dailyRange = Math.max(1, dailyMax - dailyMin);
   const cumulativeMin = Math.min(0, ...values.map((day) => day.cumulative));
-  const cumulativeMax = Math.max(DEBT_TARGET, ...values.map((day) => day.cumulative), 1);
+  const cumulativeMax = Math.max(DEBT_TARGET, ...progress.flatMap((day) => [day.runTotal, day.debtRemaining, day.debtTarget]), 1);
   const cumulativeRange = Math.max(1, cumulativeMax - cumulativeMin);
   const yDaily = (value) => bottom - (value - dailyMin) / dailyRange * (bottom - top);
   const yCumulative = (value) => bottom - (value - cumulativeMin) / cumulativeRange * (bottom - top);
@@ -198,6 +202,7 @@ function MoneyChart({ days }) {
   const barWidth = Math.min(18, Math.max(7, (slot * 0.68 - barGap * 3) / 4));
   const barOffsets = [-1.5, -.5, .5, 1.5].map((step) => step * (barWidth + barGap));
   const cumulativePoints = values.map((day, index) => `${left + slot * (index + .5)},${yCumulative(day.cumulative)}`).join(" ");
+  const debtPoints = values.map((day, index) => `${left + slot * (index + .5)},${yCumulative(day.debtRemaining)}`).join(" ");
   return (
     <div className="chart-wrap">
       <div className="chart-title"><div><h2>Where the money went</h2><p>Daily waterfall · one scale · zero line always visible</p></div><div className="legend"><span className="gross">Gross</span><span className="loss">Punishment loss</span><span className="fees">Fees</span><span className="net">Daily net</span></div></div>
@@ -222,14 +227,16 @@ function MoneyChart({ days }) {
         <text x={left} y={bottom + 47} className="waterfall-note">Gross → punishment loss → fee → net</text>
       </svg>
       <section className="cumulative-chart">
-        <div className="chart-title"><div><h2>Run progress</h2><p>Cumulative net earnings across every completed day</p></div><div className="legend"><span className="cumulative">Cumulative net</span></div></div>
-        <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Cumulative net earnings by day">
+        <div className="chart-title"><div><h2>Run progress</h2><p>Run total and debt remaining after each completed day</p></div><div className="legend"><span className="cumulative">Run total {money(progress.at(-1).runTotal)}</span><span className="debt">Debt left {money(progress.at(-1).debtRemaining)}</span></div></div>
+        <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Run total and debt remaining by day">
           {cumulativeTicks.map((value) => <g key={value}><line x1={left} x2={right} y1={yCumulative(value)} y2={yCumulative(value)} className="grid-line"/><text x={left - 9} y={yCumulative(value) + 5} textAnchor="end">${Math.round(value)}</text></g>)}
           <line x1={left} x2={right} y1={yCumulative(0)} y2={yCumulative(0)} className="zero-line" />
           <path d={`${cumulativePoints} L ${left + slot * (values.length - .5)},${bottom} L ${left + slot * .5},${bottom} Z`} className="cumulative-area" />
           <polyline points={cumulativePoints} className="cumulative-line" />
-          {values.map((day, index) => <g key={day.day}><circle cx={left + slot * (index + .5)} cy={yCumulative(day.cumulative)} r="5" className="cumulative-dot"><title>{`Cumulative net: $${Math.round(day.cumulative)}`}</title></circle><text x={left + slot * (index + .5)} y={bottom + 21} textAnchor="middle">D{day.day}</text></g>)}
+          <polyline points={debtPoints} className="debt-line" />
+          {values.map((day, index) => <g key={day.day}><circle cx={left + slot * (index + .5)} cy={yCumulative(day.cumulative)} r="5" className="cumulative-dot"><title>{`Run total: ${money(day.cumulative)}`}</title></circle><circle cx={left + slot * (index + .5)} cy={yCumulative(day.debtRemaining)} r="5" className="debt-dot"><title>{`Debt left: ${money(day.debtRemaining)} · Goal: ${money(progress[index].debtTarget)}`}</title></circle><text x={left + slot * (index + .5)} y={bottom + 21} textAnchor="middle">D{day.day}</text></g>)}
         </svg>
+        {progress.some((day) => day.estimated) && <p className="chart-note">Older days may be estimates; the latest point uses your saved run balance.</p>}
       </section>
     </div>
   );
@@ -242,7 +249,7 @@ function Report({ game, onClose }) {
     <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="Run report">
       <div className="report-modal">
         <header><div><span className="eyebrow">FULL STATISTICS</span><h1>Run report</h1></div><button className="close-button" onClick={onClose}>Close</button></header>
-        <MoneyChart days={game.completedDays} />
+        <MoneyChart game={game} />
         <div className="report-grid">
           <section><h3>Earnings</h3><p>Total gross <b>{money(stats.totalGross)}</b></p><p>Daily fees <b>−{money(stats.dailyFees)}</b></p><p>Extra fees <b>−{money(stats.extraFees)}</b></p><p>Punishment loss <b>−{money(stats.punishmentLoss)}</b></p><p>Final net <b className="green">{money(game.totalEarnings)}</b></p></section>
           <section><h3>Services & time</h3><p>Customers <b>{stats.totalServices}</b></p><p>Full pay <b>{stats.fullPay}</b></p><p>Half pay <b>{stats.halfPay}</b></p><p>Task time <b>{stats.taskMinutes} min</b></p><p>Rest time <b>{stats.restMinutes} min</b></p></section>

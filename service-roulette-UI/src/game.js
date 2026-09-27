@@ -403,6 +403,7 @@ export function resolveDay(game, rng = Math.random, now = new Date()) {
       pendingPunishments: [...normal, ...extra],
       punishmentMessages: [
         `${normal.length} normal + ${extra.length} extra = ${normal.length + extra.length} punishment roll(s).`,
+        ...game.punishmentMessages,
         ...reasons.map((reason) => `Extra punishment reason: ${reason}`),
       ],
       extraPunishmentReasons: reasons,
@@ -455,6 +456,9 @@ function completeDay(game, rng) {
     afterPunishment: game.punishmentBalance,
     dailyFee: shift.dailyFee,
     net,
+    runTotal: totalEarnings,
+    debtTarget: DEBT_TARGET + (game.addedDebt || 0),
+    debtRemaining: Math.max(0, DEBT_TARGET + (game.addedDebt || 0) - totalEarnings),
     events: game.punishmentMessages.length ? game.punishmentMessages : ["No punishment today."],
     completedDate: localDate(),
   };
@@ -506,6 +510,26 @@ export function financialStats(game) {
     halfLosses: count("Bad part of town"), robberies: count("Robbery"),
     extraShifts: count("Extra shift earned"), nonMonetary: count("Roll "),
   };
+}
+
+export function runProgress(game) {
+  let running = 0;
+  return game.completedDays.map((day, index) => {
+    running += day.net;
+    const latest = index === game.completedDays.length - 1;
+    // Older saves have no day snapshots. The latest point can still use the
+    // saved run balance; earlier points are reconstructed from daily net.
+    const runTotal = day.runTotal ?? (latest ? game.totalEarnings : running);
+    const debtTarget = day.debtTarget ?? (latest ? DEBT_TARGET + (game.addedDebt || 0) : DEBT_TARGET);
+    running = runTotal;
+    return {
+      day: day.day,
+      runTotal,
+      debtTarget,
+      debtRemaining: day.debtRemaining ?? Math.max(0, debtTarget - runTotal),
+      estimated: day.runTotal == null,
+    };
+  });
 }
 
 export function validateSave(value) {
