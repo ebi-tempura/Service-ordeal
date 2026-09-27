@@ -84,6 +84,10 @@ button:disabled { cursor: not-allowed; opacity: .42; }
 .shift-choice:hover, .shift-choice.selected { border-color: #8b5cff; background: #2c1c3d; box-shadow: inset 0 0 0 1px #8b5cff; }
 .shift-choice strong { font-size: 18px; }
 .shift-choice span { margin-top: 9px; color: #57f2aa; }
+.saved-run-choice { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin: 22px 0; padding: 18px; border: 1px solid #735185; border-radius: 12px; background: #281b35; }
+.saved-run-choice > div { display: flex; flex-direction: column; gap: 5px; }
+.saved-run-choice strong { color: #fff7fd; font-size: 18px; }
+.saved-run-choice small { color: #57f2aa; }
 .shift-choice small { margin-top: auto; color: #aa97b4; line-height: 1.4; }
 .time-field { display: grid; grid-template-columns: 1fr auto; gap: 7px 18px; align-items: center; margin: 20px 0; border-radius: 13px; padding: 17px; background: #21162e; }
 .time-field span { font-weight: 700; }
@@ -147,6 +151,9 @@ button:disabled { cursor: not-allowed; opacity: .42; }
 .chart-wrap svg { display: block; width: 100%; height: auto; margin-top: 8px; }
 .chart-wrap svg text { fill: #aa97b4; font-size: 14px; }.axis-heading { fill: #d8cade !important; font-weight: 800; }.cumulative-heading, .cumulative-axis { fill: #25dff5 !important; font-weight: 800; }
 .grid-line { stroke: #302139; stroke-width: 1; }.zero-line { stroke: #f4edf7; stroke-width: 1.5; }.waterfall-connector { stroke: #766080; stroke-width: 1; stroke-dasharray: 3 3; }.bar-gross { fill: #ff2fa4; }.bar-net { fill: #57f2aa; }.bar-fees { fill: #8b5cff; }.bar-loss, .bar-negative { fill: #ff6178; }.cumulative-line { fill: none; stroke: #25dff5; stroke-width: 3; }.cumulative-area { fill: rgba(37,223,245,.12); }.cumulative-dot { fill: #25dff5; }.debt-line { fill: none; stroke: #ffbd63; stroke-width: 3; }.debt-dot { fill: #ffbd63; }.chart-note { color: #aa97b4; font-size: 13px; margin: 8px 0 0; }
+.debt-movements { display: grid; gap: 6px; margin-top: 12px; }
+.debt-movements > div { display: grid; grid-template-columns: 80px 1fr auto; gap: 12px; padding: 8px 12px; border-radius: 8px; background: #21162e; color: #d8cade; font-size: 14px; }
+.debt-movements strong.green { color: #57f2aa; }.debt-movements strong.red { color: #ff6178; }
 .report-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 12px; }
 .report-grid section { padding: 16px; }
 .report-grid h3, .daily-results h3 { margin: 0 0 12px; color: #c6aaff; }

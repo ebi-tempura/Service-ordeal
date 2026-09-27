@@ -24,9 +24,9 @@ function money(value) {
 function loadAutosave() {
   try {
     const parsed = JSON.parse(localStorage.getItem(SAVE_KEY));
-    return validateSave(parsed) ? parsed : initialGame();
+    return validateSave(parsed) && parsed.configured ? parsed : null;
   } catch {
-    return initialGame();
+    return null;
   }
 }
 
@@ -39,7 +39,7 @@ function Progress({ label, value, detail, tone = "pink" }) {
   );
 }
 
-function Setup({ onStart }) {
+function Setup({ onStart, savedGame, onContinue }) {
   const [shiftKey, setShiftKey] = useState("shift1");
   const [start, setStart] = useState("19:30");
   const [timeLock, setTimeLock] = useState(false);
@@ -49,6 +49,7 @@ function Setup({ onStart }) {
         <div className="eyebrow">NEW RUN</div>
         <h1>Choose your shift</h1>
         <p>Your selection fixes the time limit and fees for the entire run.</p>
+        {savedGame && <div className="saved-run-choice"><div><span className="eyebrow">SAVED RUN</span><strong>Day {savedGame.day} · {SHIFTS[savedGame.shiftKey].label}</strong><small>Run total {money(savedGame.totalEarnings)}</small></div><button className="secondary-action" onClick={onContinue}>CONTINUE SAVED RUN →</button></div>}
         <div className="shift-grid">
           {Object.entries(SHIFTS).map(([key, shift]) => (
             <button key={key} className={`shift-choice ${shiftKey === key ? "selected" : ""}`} onClick={() => setShiftKey(key)}>
@@ -64,7 +65,7 @@ function Setup({ onStart }) {
           <small>You have a five-minute grace period.</small>
         </label>
         <label className="mini-toggle setup-toggle"><input type="checkbox" checked={timeLock} onChange={(event) => setTimeLock(event.target.checked)} /><span className="toggle-track"><i /></span><b>Time Lock</b><small>Block early and same-day regular shifts</small></label>
-        <button className="primary-action" onClick={() => onStart(shiftKey, start, timeLock)}>START THE RUN →</button>
+        <button className="primary-action" onClick={() => onStart(shiftKey, start, timeLock)}>{savedGame ? "START A NEW RUN →" : "START THE RUN →"}</button>
       </section>
     </main>
   );
@@ -198,11 +199,14 @@ function MoneyChart({ game }) {
   const dailyTicks = Array.from({ length: 4 }, (_, index) => dailyMin + dailyRange * index / 3);
   const cumulativeTicks = Array.from({ length: 4 }, (_, index) => cumulativeMin + cumulativeRange * index / 3);
   const slot = (right - left) / values.length;
+  const progressSlot = (right - left) / (values.length + 1);
+  const progressX = (index) => left + progressSlot * (index + .5);
+  const points = [{ day: 0, runTotal: 0, debtRemaining: DEBT_TARGET }, ...progress];
   const barGap = 3;
   const barWidth = Math.min(18, Math.max(7, (slot * 0.68 - barGap * 3) / 4));
   const barOffsets = [-1.5, -.5, .5, 1.5].map((step) => step * (barWidth + barGap));
-  const cumulativePoints = values.map((day, index) => `${left + slot * (index + .5)},${yCumulative(day.cumulative)}`).join(" ");
-  const debtPoints = values.map((day, index) => `${left + slot * (index + .5)},${yCumulative(day.debtRemaining)}`).join(" ");
+  const cumulativePoints = points.map((day, index) => `${progressX(index)},${yCumulative(day.runTotal)}`).join(" ");
+  const debtPoints = points.map((day, index) => `${progressX(index)},${yCumulative(day.debtRemaining)}`).join(" ");
   return (
     <div className="chart-wrap">
       <div className="chart-title"><div><h2>Where the money went</h2><p>Daily waterfall · one scale · zero line always visible</p></div><div className="legend"><span className="gross">Gross</span><span className="loss">Punishment loss</span><span className="fees">Fees</span><span className="net">Daily net</span></div></div>
@@ -227,15 +231,19 @@ function MoneyChart({ game }) {
         <text x={left} y={bottom + 47} className="waterfall-note">Gross → punishment loss → fee → net</text>
       </svg>
       <section className="cumulative-chart">
-        <div className="chart-title"><div><h2>Run progress</h2><p>Run total and debt remaining after each completed day</p></div><div className="legend"><span className="cumulative">Run total {money(progress.at(-1).runTotal)}</span><span className="debt">Debt left {money(progress.at(-1).debtRemaining)}</span></div></div>
+        <div className="chart-title"><div><h2>Run progress</h2><p>Debt rises with losses or added debt and falls as your run total grows.</p></div><div className="legend"><span className="cumulative">Run total {money(progress.at(-1).runTotal)}</span><span className="debt">Debt left {money(progress.at(-1).debtRemaining)}</span></div></div>
         <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Run total and debt remaining by day">
           {cumulativeTicks.map((value) => <g key={value}><line x1={left} x2={right} y1={yCumulative(value)} y2={yCumulative(value)} className="grid-line"/><text x={left - 9} y={yCumulative(value) + 5} textAnchor="end">${Math.round(value)}</text></g>)}
           <line x1={left} x2={right} y1={yCumulative(0)} y2={yCumulative(0)} className="zero-line" />
-          <path d={`${cumulativePoints} L ${left + slot * (values.length - .5)},${bottom} L ${left + slot * .5},${bottom} Z`} className="cumulative-area" />
+          <path d={`${cumulativePoints} L ${progressX(points.length - 1)},${bottom} L ${progressX(0)},${bottom} Z`} className="cumulative-area" />
           <polyline points={cumulativePoints} className="cumulative-line" />
           <polyline points={debtPoints} className="debt-line" />
-          {values.map((day, index) => <g key={day.day}><circle cx={left + slot * (index + .5)} cy={yCumulative(day.cumulative)} r="5" className="cumulative-dot"><title>{`Run total: ${money(day.cumulative)}`}</title></circle><circle cx={left + slot * (index + .5)} cy={yCumulative(day.debtRemaining)} r="5" className="debt-dot"><title>{`Debt left: ${money(day.debtRemaining)} · Goal: ${money(progress[index].debtTarget)}`}</title></circle><text x={left + slot * (index + .5)} y={bottom + 21} textAnchor="middle">D{day.day}</text></g>)}
+          {points.map((point, index) => <g key={point.day}><circle cx={progressX(index)} cy={yCumulative(point.runTotal)} r="5" className="cumulative-dot"><title>{`Run total: ${money(point.runTotal)}`}</title></circle><circle cx={progressX(index)} cy={yCumulative(point.debtRemaining)} r="5" className="debt-dot"><title>{`Debt left: ${money(point.debtRemaining)} · Goal: ${money(point.debtTarget || DEBT_TARGET)}`}</title></circle><text x={progressX(index)} y={bottom + 21} textAnchor="middle">D{point.day}</text></g>)}
         </svg>
+        <div className="debt-movements">{progress.map((point, index) => {
+          const change = point.debtRemaining - points[index].debtRemaining;
+          return <div key={point.day}><span>Day {point.day}</span><strong className={change > 0 ? "red" : change < 0 ? "green" : ""}>{change > 0 ? `+${money(change)} debt` : change < 0 ? `−${money(-change)} debt` : "No change"}</strong><span>{money(point.debtRemaining)} left</span></div>;
+        })}</div>
         {progress.some((day) => day.estimated) && <p className="chart-note">Older days may be estimates; the latest point uses your saved run balance.</p>}
       </section>
     </div>
@@ -263,18 +271,19 @@ function Report({ game, onClose }) {
 }
 
 export default function App() {
-  const [game, setGame] = useState(loadAutosave);
+  const [savedGame, setSavedGame] = useState(loadAutosave);
+  const [game, setGame] = useState(null);
   const [reportOpen, setReportOpen] = useState(false);
   const [pinkFlash, setPinkFlash] = useState(0);
   const [summaryTab, setSummaryTab] = useState("overview");
   const importRef = useRef(null);
-  const shift = SHIFTS[game.shiftKey];
-  const timeLeft = game.configured ? remainingTime(game) : 0;
-  const debtTarget = DEBT_TARGET + (game.addedDebt || 0);
-  const debtLeft = Math.max(0, debtTarget - game.totalEarnings);
+  const shift = game ? SHIFTS[game.shiftKey] : null;
+  const timeLeft = game ? remainingTime(game) : 0;
+  const debtTarget = DEBT_TARGET + (game?.addedDebt || 0);
+  const debtLeft = Math.max(0, debtTarget - (game?.totalEarnings || 0));
 
-  useEffect(() => { localStorage.setItem(SAVE_KEY, JSON.stringify(game)); }, [game]);
-  useEffect(() => { if (game.mode === "releaseReady") setSummaryTab("overview"); if (game.mode === "release") setSummaryTab("release"); }, [game.mode]);
+  useEffect(() => { if (game) localStorage.setItem(SAVE_KEY, JSON.stringify(game)); }, [game]);
+  useEffect(() => { if (game?.mode === "releaseReady") setSummaryTab("overview"); if (game?.mode === "release") setSummaryTab("release"); }, [game?.mode]);
 
   const handleRollCustomer = () => {
     const next = rollCustomer(game);
@@ -294,9 +303,13 @@ export default function App() {
     catch { alert("That file is not a valid Service Roulette save."); }
     event.target.value = "";
   };
-  const reset = () => { if (confirm("Start a new run? Export your current save first if you want to keep it.")) { localStorage.removeItem(SAVE_KEY); setGame(initialGame()); setReportOpen(false); } };
+  const reset = () => { if (confirm("Start a new run? Export your current save first if you want to keep it.")) { localStorage.removeItem(SAVE_KEY); setSavedGame(null); setGame(null); setReportOpen(false); } };
 
-  if (!game.configured) return <Setup onStart={(key, start, timeLock) => setGame(configureGame(game, key, start, timeLock))} />;
+  if (!game) return <Setup savedGame={savedGame} onContinue={() => setGame(savedGame)} onStart={(key, start, timeLock) => {
+    if (savedGame && !confirm("Start a new run? Export your saved run first if you want to keep it.")) return;
+    setSavedGame(null);
+    setGame(configureGame(initialGame(), key, start, timeLock));
+  }} />;
 
   const isSummary = ["dayComplete", "releaseReady", "release"].includes(game.mode);
   const final = ["releaseReady", "release"].includes(game.mode);
